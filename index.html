@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Text Reader Gemini</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css" />
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 1rem; background: #f5f5f5; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        textarea, input[type='file'], select { width: 100%; margin: 1rem 0; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 0.25rem; box-sizing: border-box; }
+        img { max-width: 100%; display: block; margin: auto; }
+        button.btn { margin: 0.5rem 0; border-radius: 0.25rem; cursor: pointer; position: relative; overflow: hidden; }
+        button.btn.loading::after {
+            content: '';
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin: -8px 0 0 -8px;
+            border: 3px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .result-box { white-space: pre-wrap; background: #f0f0f0; padding: 1rem; border-radius: 5px; margin-top: 1rem; }
+        .remove-api { background-color: #dc3545; border-color: #dc3545; }
+        .remove-api:hover { background-color: #c82333; border-color: #bd2130; }
+        .copy-btn { background-color: #28a745; border-color: #28a745; }
+        .copy-btn:hover { background-color: #218838; border-color: #1e7e34; }
+        .api-input-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .api-input-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .api-input-box input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            box-sizing: border-box;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .paste-button-container {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <h2 class="d-flex justify-content-between align-items-center mb-3">
+            📸 Text Reader Gemini
+            <button v-if="apiKey" @click="removeApiKey" class="btn btn-danger btn-sm remove-api">🗑 Hapus API</button>
+        </h2>
+
+        <div class="form-group">
+            <select v-model="ocrLang" class="form-control">
+                <option value="ara">Arab</option>
+                <option value="eng">Latin</option>
+            </select>
+        </div>
+
+        <div class="form-group paste-button-container">
+            <button @click="pasteFromClipboard" class="btn btn-info btn-block">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check mr-2" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+                    <path d="M4 1.5H3a2 2 0 0 0-2 2V12a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                    <path d="M9 1a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v9a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h1V2a1 1 0 0 1 1-1h2z"/>
+                </svg>
+                Tempel dari Clipboard (Gambar)
+            </button>
+        </div>
+
+       <div class="form-group">
+    <input type="file" accept="image/*" @change="onImageChange" class="form-control-file">
+</div>
+
+        <canvas id="canvas" style="display:none;"></canvas>
+        <img id="image" v-show="showCropper" class="mb-2" />
+        <button v-if="showCropper" @click="cropAndRecognize" :class="{'btn-primary': !isCropping, 'btn-primary loading': isCropping}">
+            <span v-if="!isCropping">📐 Crop & OCR</span>
+            <span v-else>⏳ Processing...</span>
+        </button>
+        <button v-if="showCropper" @click="fullCrop" class="btn btn-secondary ml-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-crop mr-1" viewBox="0 0 16 16">
+                <path d="M3.5 1.5a.5.5 0 0 1 .5.5V3h-1.5a.5.5 0 0 1 0-1H3v-1.5a.5.5 0 0 1 .5-.5zm-2 0a.5.5 0 0 0-.5.5V3h1.5a.5.5 0 0 0 0-1H1v-1.5a.5.5 0 0 0-.5-.5zM1 3a.5.5 0 0 1 .5-.5H3V1.5a.5.5 0 0 1 1 0V2.5h1.5a.5.5 0 0 1 0 1H4v1.5a.5.5 0 0 1-1 0V3H1.5a.5.5 0 0 1-.5-.5zM14 3a.5.5 0 0 1-.5-.5H12V1.5a.5.5 0 0 1 1 0V2.5h1.5a.5.5 0 0 1 0 1H13v1.5a.5.5 0 0 1-1 0V3h-1.5a.5.5 0 0 1-.5-.5zM12.5 1.5a.5.5 0 0 0-.5.5V3h1.5a.5.5 0 0 0 0-1H13v-1.5a.5.5 0 0 0-.5-.5zM14 1a.5.5 0 0 1 .5.5V3h-1.5a.5.5 0 0 1 0-1H15v-1.5a.5.5 0 0 1-.5-.5zM15 12a.5.5 0 0 1-.5.5H13v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H12v-1.5a.5.5 0 0 1 1 0V12h1.5a.5.5 0 0 1 .5.5zM13.5 14.5a.5.5 0 0 0-.5-.5H12v-1.5a.5.5 0 0 0-1 0V14h-1.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V15h1.5a.5.5 0 0 0 0-1H14v-1.5a.5.5 0 0 0-.5-.5zM3 12a.5.5 0 0 1 .5.5H4v1.5a.5.5 0 0 1-1 0V13H1.5a.5.5 0 0 1 0-1H3v-1.5a.5.5 0 0 1 1 0V12H3.5a.5.5 0 0 1-.5-.5zM1.5 14.5a.5.5 0 0 0 .5-.5H3v-1.5a.5.5 0 0 0-1 0V14H1.5a.5.5 0 0 0 0 .5zM.5 12a.5.5 0 0 0 .5.5H2v1.5a.5.5 0 0 0 1 0V13h1.5a.5.5 0 0 0 0-1H3v-1.5a.5.5 0 0 0-1 0V12H.5z"/>
+            </svg>
+            Full Crop
+        </button>
+
+        <div class="form-group">
+            <textarea v-model="textInput" rows="5" placeholder="Atau tulis/ubah teks manual di sini..." class="form-control"></textarea>
+        </div>
+
+        <div class="mb-3" v-if="textInput.trim()">
+            <button @click="copyText" class="btn btn-success copy-btn">📋 Salin Teks</button>
+        </div>
+
+        <button @click="analyzeContent" :class="{'btn-primary': !loading, 'btn-primary loading': loading}">
+            <span v-if="!loading">🔍 Analisis dengan Gemini</span>
+            <span v-else>⏳ Menganalisis...</span>
+        </button>
+
+        <div v-if="loading" class="mt-3">⏳ Menganalisis...</div>
+        <div v-if="summary" class="result-box mt-3">
+            <div><strong>📚 Hasil Analisis:</strong></div>
+            <div v-html="formattedSummary"></div>
+        </div>
+
+        <div v-if="!apiKey && showApiKeyInput" class="api-input-overlay">
+            <div class="api-input-box">
+                <h5>Masukkan API Key Gemini</h5>
+                <input type="text" v-model="apiKeyInput" placeholder="Masukkan API Key Gemini Anda" class="form-control mb-2" />
+                <button @click="saveApiKey" class="btn btn-primary mr-2">Simpan API Key</button>
+                <button @click="skipApiKey" class="btn btn-secondary">Lewati</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                textInput: '',
+                summary: '',
+                loading: false,
+                showCropper: false,
+                cropper: null,
+                apiKey: localStorage.getItem('gemini_api') || '',
+                apiKeyInput: '',
+                ocrLang: 'ara', // OCR language for Arabic (default)
+                apiKeySkipped: localStorage.getItem('gemini_api_skipped') === 'true' || false,
+                showApiKeyInput: false,
+                isCropping: false, // State untuk animasi Crop & OCR
+                isCameraImage: false, // State untuk menandai gambar dari kamera
+                pastedImage: null, // State untuk menyimpan data URL gambar yang di-paste
+            },
+            computed: {
+                formattedSummary() {
+                    if (!this.summary) return '';
+                    const formattedText = this.summary
+                        .replace(/\*\*\*/g, '')
+                        .replace(/(^|\n)([^\n]+):/g, '<strong>$2</strong>:')
+                        .replace(/\n/g, '<br />');
+                    return formattedText;
+                }
+            },
+            methods: {
+                saveApiKey() {
+                    if (!this.apiKeyInput.trim()) {
+                        alert("API Key tidak boleh kosong.");
+                        return;
+                    }
+                    localStorage.setItem('gemini_api', this.apiKeyInput.trim());
+                    this.apiKey = this.apiKeyInput.trim();
+                    this.apiKeySkipped = false;
+                    localStorage.removeItem('gemini_api_skipped');
+                    this.showApiKeyInput = false;
+                    this.analyzeContent();
+                },
+                skipApiKey() {
+                    this.apiKeySkipped = true;
+                    localStorage.setItem('gemini_api_skipped', 'true');
+                    this.showApiKeyInput = false;
+                },
+                removeApiKey() {
+                    localStorage.removeItem('gemini_api');
+                    this.apiKey = '';
+                    this.apiKeySkipped = false;
+                    localStorage.removeItem('gemini_api_skipped');
+                },
+                onImageChange(event) {
+                    const file = event.target.files[0];
+                    this.handleImage(file);
+                },
+                pasteFromClipboard() {
+                    navigator.clipboard.read()
+                        .then(items => {
+                            items.forEach(item => {
+                                if (item.types.includes('image/png')) {
+                                    item.getType('image/png').then(blob => {
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => {
+                                            this.handleImage(event.target.result);
+                                            alert('✅ Gambar berhasil ditempel! Klik "Crop & OCR" untuk melanjutkan.');
+                                            };
+                                        reader.readAsDataURL(blob);
+                                    });
+                                } else if (item.types.includes('image/jpeg')) {
+                                    item.getType('image/jpeg').then(blob => {
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => {
+                                            this.handleImage(event.target.result);
+                                            alert('✅ Gambar berhasil ditempel! Klik "Crop & OCR" atau "Full Crop" untuk melanjutkan.');
+                                        };
+                                        reader.readAsDataURL(blob);
+                                    });
+                                } else {
+                                    alert('❌ Tidak ada data gambar yang ditemukan di clipboard.');
+                                }
+                            });
+                        })
+                        .catch(err => {
+                            console.error('Gagal membaca clipboard: ', err);
+                            alert('❌ Gagal mengakses clipboard. Pastikan browser Anda mengizinkan akses clipboard.');
+                        });
+                },
+                handleImage(imageData) {
+                    let imageUrl;
+                    if (imageData instanceof File) {
+                        imageUrl = URL.createObjectURL(imageData);
+                        this.isCameraImage = imageData.type.startsWith('image/');
+                    } else {
+                        imageUrl = imageData;
+                        this.isCameraImage = false;
+                    }
+
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.getElementById('canvas');
+                        canvas.width = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+
+                        const imageElement = document.getElementById('image');
+                        imageElement.src = img.src;
+
+                        this.$nextTick(() => {
+                            this.showCropper = true;
+                            if (this.cropper) this.cropper.destroy();
+                            this.cropper = new Cropper(imageElement, {
+                                aspectRatio: NaN,
+                                viewMode: 1,
+                                autoCropArea: 1,
+                                movable: true,
+                                zoomable: true,
+                                cropBoxResizable: true,
+                                cropBoxMovable: true,
+                            });
+                        });
+                    };
+                    img.src = imageUrl;
+                },
+                cropAndRecognize() {
+                    if (!this.cropper) {
+                        alert('⚠️ Harap tempel atau unggah gambar terlebih dahulu.');
+                        return;
+                    }
+                    this.isCropping = true;
+                    const croppedCanvas = this.cropper.getCroppedCanvas();
+                    const canvas = document.getElementById('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    canvas.width = croppedCanvas.width;
+                    canvas.height = croppedCanvas.height;
+                    ctx.drawImage(croppedCanvas, 0, 0);
+                    this.showCropper = false;
+                    this.cropper.destroy();
+
+                    let imageToOcr = canvas.toDataURL();
+
+                    // Resize jika gambar kemungkinan dari kamera (walaupun sekarang bisa dari clipboard juga)
+                    if (this.isCameraImage) {
+                        const MAX_WIDTH = 1200;
+                        const MAX_HEIGHT = 1200;
+                        let width = canvas.width;
+                        let height = canvas.height;
+
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+
+                        const resizingCanvas = document.createElement('canvas');
+                        resizingCanvas.width = width;
+                        resizingCanvas.height = height;
+                        const resizingCtx = resizingCanvas.getContext('2d');
+                        resizingCtx.drawImage(canvas, 0, 0, width, height);
+                        imageToOcr = resizingCanvas.toDataURL();
+                    }
+
+                    Tesseract.recognize(
+                        imageToOcr,
+                        this.ocrLang,
+                        { langPath: 'https://tessdata.projectnaptha.com/4.0.0_best/' }
+                    ).then(({ data: { text } }) => {
+                        this.textInput = text.trim();
+                    }).catch(err => {
+                        console.error(err);
+                        alert("❌ Gagal melakukan OCR. Pastikan koneksi internet aktif.");
+                    }).finally(() => {
+                        this.isCropping = false;
+                    });
+                },
+                fullCrop() {
+                    if (this.cropper) {
+                        this.cropper.reset(); // Reset the crop box to the initial full image
+                    } else {
+                        alert('⚠️ Harap unggah gambar terlebih dahulu.');
+                    }
+                },
+                async analyzeContent() {
+                    if (!this.apiKey && !this.apiKeySkipped) {
+                        this.showApiKeyInput = true;
+                        return;
+                    }
+                    if (!this.textInput.trim()) {
+                        alert("Masukkan teks terlebih dahulu.");
+                        return;
+                    }
+                    this.loading = true;
+                    this.summary = '';
+                    const apiKeyToUse = this.apiKey;
+                    if (!apiKeyToUse) {
+                        this.summary = '⚠️ API Key Gemini belum diatur. Fitur analisis tidak dapat digunakan.';
+                        this.loading = false;
+                        this.showApiKeyInput = true;
+                        return;
+                    }
+                    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKeyToUse}`;
+                    const prompt = `Tolong jelaskan ayat atau teks berikut dengan jelas, dan mudah dipahami. Gunakan bahasa Indonesia yang enak dibaca, tidak perlu banyak tanda * . Buat formatnya seperti ini:
+
+
+tulis ulang teks arabnya (dengan harokat kaidah nahwu yg benar),
+
+Terjemahkan.
+
+Penjelasan ringkas (jika ada)
+
+pisahkan dengan 2 baris baru
+
+Pelajaran penting (dalam poin)
+pisahkan dengan 2 baris baru
+
+
+Berikut teksnya:\n\n${this.textInput}`;
+
+                    const requestBody = {
+                        contents: [{ parts: [{ text: prompt }] }]
+                    };
+
+                    try {
+                        const res = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(requestBody)
+                        });
+                        const data = await res.json();
+                        this.summary = data.candidates?.[0]?.content?.parts?.[0]?.text || '❗ Tidak ada respons dari Gemini.';
+                    } catch (err) {
+                        console.error(err);
+                        this.summary = '❌ Terjadi kesalahan saat menghubungi Gemini API.';
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                copyText() {
+                    navigator.clipboard.writeText(this.textInput)
+                        // .then(() => alert("✅ Teks berhasil disalin!"))
+                        .catch(err => alert("❌ Gagal menyalin teks: " + err));
+                },
+                mounted() {
+                    // Langsung tampilkan input API jika belum ada dan tidak di-skip
+                    if (!this.apiKey && !this.apiKeySkipped) {
+                        this.showApiKeyInput = true;
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
