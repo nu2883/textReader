@@ -5,64 +5,137 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Text Reader Gemini</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
-        integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css" />
     <style>
         body {
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 1rem;
-            background: #f5f5f5;
+            background: linear-gradient(to right, #ece9e6, #ffffff);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better scrolling on smaller screens */
         }
 
         .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 768px; /* Ukuran container lebih besar */
+            margin-top: 2rem; /* Jarak dari atas */
+            margin-bottom: 2rem; /* Jarak dari bawah */
+            background: #ffffff;
+            padding: 2rem; /* Padding lebih besar */
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
+        }
+
+        h2 {
+            color: #343a40;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
         }
 
         textarea,
         input[type='file'],
         select {
-            width: 100%;
-            margin: 1rem 0;
-            padding: 0.5rem;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
             border: 1px solid #ced4da;
-            border-radius: 0.25rem;
-            box-sizing: border-box;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        textarea:focus,
+        input[type='file']:focus,
+        select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            outline: 0;
         }
 
         img {
             max-width: 100%;
+            height: auto; /* Pastikan tinggi menyesuaikan */
             display: block;
-            margin: auto;
+            margin: 1rem auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
 
-        button.btn {
-            margin: 0.5rem 0;
-            border-radius: 0.25rem;
-            cursor: pointer;
+        .btn {
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+            border-color: #117a8b;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+
+        button.btn.loading {
             position: relative;
-            overflow: hidden;
+            pointer-events: none; /* Mencegah klik saat loading */
         }
 
         button.btn.loading::after {
             content: '';
-            display: block;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 16px;
-            height: 16px;
-            margin: -8px 0 0 -8px;
+            display: inline-block; /* Menggunakan inline-block untuk menjaga layout */
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-left: 0.5rem; /* Jarak antara teks dan spinner */
+            vertical-align: middle;
             border: 3px solid #fff;
             border-top-color: transparent;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin {
@@ -76,31 +149,19 @@
         }
 
         .result-box {
-            white-space: pre-wrap;
-            background: #f0f0f0;
-            padding: 1rem;
-            border-radius: 5px;
-            margin-top: 1rem;
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            border: 1px solid #e9ecef;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
-        .remove-api {
-            background-color: #dc3545;
-            border-color: #dc3545;
-        }
-
-        .remove-api:hover {
-            background-color: #c82333;
-            border-color: #bd2130;
-        }
-
-        .copy-btn {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-
-        .copy-btn:hover {
-            background-color: #218838;
-            border-color: #1e7e34;
+        .result-box strong {
+            color: #495057;
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            display: block;
         }
 
         .api-input-overlay {
@@ -109,28 +170,28 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            backdrop-filter: blur(5px); /* Efek blur pada latar belakang */
         }
 
         .api-input-box {
             background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
             text-align: center;
+            width: 90%;
+            max-width: 400px;
         }
 
-        .api-input-box input[type="text"] {
-            width: 100%;
-            padding: 0.5rem;
-            margin-bottom: 1rem;
-            border: 1px solid #ced4da;
-            border-radius: 0.25rem;
-            box-sizing: border-box;
+        .api-input-box h5 {
+            margin-bottom: 1.5rem;
+            color: #343a40;
+            font-weight: 600;
         }
 
         .hidden {
@@ -141,74 +202,89 @@
             margin-bottom: 1rem;
         }
 
-        /* --- Gaya Baru untuk Text-to-Speech Highlighting --- */
+        /* --- Gaya Text-to-Speech Highlighting & Controls --- */
         .sentence-list {
-            margin-top: 30px;
+            margin-top: 2rem;
             text-align: left;
             border-top: 1px solid #eee;
-            padding-top: 20px;
+            padding-top: 1.5rem;
         }
 
         .sentence-list h3 {
-            margin-bottom: 15px;
+            margin-bottom: 1rem;
             color: #333;
+            font-size: 1.3rem;
+            font-weight: 600;
         }
 
         .sentence-item {
-            padding: 8px 12px;
+            padding: 10px 15px;
             margin-bottom: 8px;
             border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            background-color: #f9f9f9;
+            border-radius: 6px;
+            background-color: #fcfcfc;
             cursor: pointer;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
-            line-height: 1.5;
+            transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            line-height: 1.6;
+            color: #343a40;
         }
 
         .sentence-item:hover {
-            background-color: #e9e9e9;
-            border-color: #d0d0d0;
+            background-color: #f0f0f0;
+            border-color: #c0c0c0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .active-sentence {
-            background-color: #e0f7fa;
-            border-color: #00bcd4;
+            background-color: #e3f2fd; /* Light blue */
+            border-color: #90caf9; /* Muted blue */
             font-weight: bold;
-            color: #00796b;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            color: #1565c0; /* Darker blue */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            animation: pulse-active 1.5s infinite alternate; /* Animasi berkedip */
+        }
+
+        @keyframes pulse-active {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(1.01); opacity: 0.95; }
         }
 
         .completed-sentence {
-            background-color: #e8f5e9;
-            border-color: #4caf50;
+            background-color: #e8f5e9; /* Light green */
+            border-color: #a5d6a7; /* Muted green */
             color: #555;
+            opacity: 0.8;
         }
 
         .tts-controls {
             display: flex;
+            flex-wrap: wrap; /* Izinkan wrapping pada layar kecil */
             align-items: center;
-            gap: 15px; /* Spasi antar elemen kontrol */
-            margin-top: 15px;
-            padding: 10px;
-            border: 1px solid #eee;
-            border-radius: 5px;
-            background-color: #f8f8f8;
+            gap: 15px;
+            margin-top: 1.5rem;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .tts-controls label {
-            margin-bottom: 0; /* Hapus margin bawah default label */
-            font-weight: bold;
+            margin-bottom: 0;
+            font-weight: 600;
+            color: #495057;
+            flex-basis: 100%; /* Label mengambil lebar penuh di layar kecil */
+            text-align: center;
         }
 
         .tts-controls input[type="range"] {
-            flex-grow: 1; /* Slider akan mengisi ruang yang tersedia */
-            -webkit-appearance: none; /* Hapus gaya default WebKit */
+            flex-grow: 1;
+            -webkit-appearance: none;
             width: 100%;
-            height: 8px;
-            background: #d3d3d3;
+            height: 10px; /* Lebih tinggi sedikit */
+            background: #e0e0e0;
             outline: none;
-            opacity: 0.7;
-            -webkit-transition: .2s;
+            opacity: 0.9;
             transition: opacity .2s;
             border-radius: 5px;
         }
@@ -216,42 +292,93 @@
         .tts-controls input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 24px; /* Lebih besar */
+            height: 24px; /* Lebih besar */
             border-radius: 50%;
             background: #007bff;
-            cursor: pointer;
+            cursor: grab; /* Kursor berubah saat di atas thumb */
+            box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .tts-controls input[type="range"]::-webkit-slider-thumb:active {
+            cursor: grabbing; /* Kursor berubah saat digeser */
+            background-color: #0056b3;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.5);
         }
 
         .tts-controls input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             background: #007bff;
-            cursor: pointer;
+            cursor: grab;
+            box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
         }
-        /* --- Akhir Gaya Baru --- */
+
+        .tts-controls input[type="range"]::-moz-range-thumb:active {
+            cursor: grabbing;
+            background-color: #0056b3;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.5);
+        }
+
+        .tts-controls span {
+            font-weight: bold;
+            color: #007bff;
+            min-width: 40px; /* Pastikan ada ruang yang cukup */
+            text-align: right;
+        }
+
+        .status-message {
+            margin-top: 1rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            text-align: center;
+            background-color: #e9ecef;
+            color: #495057;
+            border: 1px solid #dee2e6;
+        }
+
+        /* Responsif untuk layar kecil (mobile first) */
+        @media (min-width: 576px) {
+            .tts-controls label {
+                flex-basis: auto; /* Label kembali ke lebar otomatis di layar lebih besar */
+                text-align: left;
+            }
+        }
+
+        /* Utilitas Bootstrap 5 (ml-* diganti jadi ms-*) */
+        .ml-2 { /* Mengganti utility dari Bootstrap 4 */
+            margin-left: .5rem !important;
+        }
+
+        .mr-2 { /* Mengganti utility dari Bootstrap 4 */
+            margin-right: .5rem !important;
+        }
     </style>
 </head>
 
 <body>
     <div id="app" class="container">
-        <h2 class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="d-flex justify-content-between align-items-center mb-4">
             📸 Text Reader Gemini
-            <button v-if="apiKey" @click="removeApiKey" class="btn btn-danger btn-sm remove-api">🗑 Hapus API</button>
+            <button v-if="apiKey" @click="removeApiKey" class="btn btn-danger btn-sm">🗑 Hapus API</button>
         </h2>
 
-        <div class="form-group">
-            <select v-model="ocrLang" class="form-control">
+        <div class="mb-3">
+            <label for="ocrLang" class="form-label">Bahasa OCR:</label>
+            <select v-model="ocrLang" class="form-select" id="ocrLang">
                 <option value="ara">Arab</option>
                 <option value="eng">Latin</option>
             </select>
         </div>
 
-        <div class="form-group paste-button-container">
-            <button @click="pasteFromClipboard" class="btn btn-info btn-block">
+        <div class="mb-3">
+            <button @click="pasteFromClipboard" class="btn btn-info w-100 mb-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-clipboard-check mr-2" viewBox="0 0 16 16">
+                    class="bi bi-clipboard-check me-2" viewBox="0 0 16 16">
                     <path fill-rule="evenodd"
                         d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z" />
                     <path
@@ -263,38 +390,43 @@
             </button>
         </div>
 
-        <div class="form-group">
-            <input type="file" accept="image/*" @change="onImageChange" class="form-control-file">
+        <div class="mb-3">
+            <label for="imageUpload" class="form-label">Unggah Gambar:</label>
+            <input type="file" id="imageUpload" accept="image/*" @change="onImageChange" class="form-control">
         </div>
 
         <canvas id="canvas" style="display:none;"></canvas>
-        <img id="image" v-show="showCropper" class="mb-2" />
-        <button v-if="showCropper" @click="cropAndRecognize"
-            :class="{'btn-primary': !isCropping, 'btn-primary loading': isCropping}">
-            <span v-if="!isCropping">📐 Crop & OCR</span>
-            <span v-else>⏳ Processing...</span>
-        </button>
-        <button v-if="showCropper" @click="fullCrop" class="btn btn-secondary ml-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-crop mr-1"
-                viewBox="0 0 16 16">
-                <path
-                    d="M3.5 1.5a.5.5 0 0 1 .5.5V3h-1.5a.5.5 0 0 1 0-1H3v-1.5a.5.5 0 0 1 .5-.5zm-2 0a.5.5 0 0 0-.5.5V3h1.5a.5.5 0 0 0 0-1H1v-1.5a.5.5 0 0 0-.5-.5zM1 3a.5.5 0 0 1 .5-.5H3V1.5a.5.5 0 0 1 1 0V2.5h1.5a.5.5 0 0 1 0 1H4v1.5a.5.5 0 0 1-1 0V3H1.5a.5.5 0 0 1-.5-.5zM14 3a.5.5 0 0 1-.5-.5H12V1.5a.5.5 0 0 1 1 0V2.5h1.5a.5.5 0 0 1 0 1H13v1.5a.5.5 0 0 1-1 0V3h-1.5a.5.5 0 0 1-.5-.5zM12.5 1.5a.5.5 0 0 0-.5.5V3h1.5a.5.5 0 0 0 0-1H13v-1.5a.5.5 0 0 0-.5-.5zM14 1a.5.5 0 0 1 .5.5V3h-1.5a.5.5 0 0 1 0-1H15v-1.5a.5.5 0 0 1-.5-.5zM15 12a.5.5 0 0 1-.5.5H13v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H12v-1.5a.5.5 0 0 1 1 0V12h1.5a.5.5 0 0 1 .5.5zM13.5 14.5a.5.5 0 0 0-.5-.5H12v-1.5a.5.5 0 0 0-1 0V14h-1.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V15h1.5a.5.5 0 0 0 0-1H14v-1.5a.5.5 0 0 0-.5-.5zM3 12a.5.5 0 0 1 .5.5H4v1.5a.5.5 0 0 1-1 0V13H1.5a.5.5 0 0 1 0-1H3v-1.5a.5.5 0 0 1 1 0V12H3.5a.5.5 0 0 1-.5-.5zM1.5 14.5a.5.5 0 0 0 .5-.5H3v-1.5a.5.5 0 0 0-1 0V14H1.5a.5.5 0 0 0 0 .5zM.5 12a.5.5 0 0 0 .5.5H2v1.5a.5.5 0 0 0 1 0V13h1.5a.5.5 0 0 0 0-1H3v-1.5a.5.5 0 0 0-1 0V12H.5z" />
-            </svg>
-            Full Crop
-        </button>
-
-        <div class="form-group">
-            <textarea v-model="textInput" rows="5" placeholder="Atau tulis/ubah teks manual di sini..."
-                class="form-control"></textarea>
+        <img id="image" v-show="showCropper" class="img-fluid mb-3" />
+        <div v-if="showCropper" class="d-grid gap-2 d-md-flex justify-content-md-center mb-3">
+            <button @click="cropAndRecognize"
+                :class="{'btn-primary': !isCropping, 'btn-primary loading': isCropping, 'btn': true, 'flex-grow-1': true}">
+                <span v-if="!isCropping">📐 Crop & OCR</span>
+                <span v-else>⏳ Processing...</span>
+            </button>
+            <button @click="fullCrop" class="btn btn-secondary flex-grow-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-crop me-1" viewBox="0 0 16 16">
+                    <path
+                        d="M3.5 1.5a.5.5 0 0 1 .5.5V3h-1.5a.5.5 0 0 1 0-1H3v-1.5a.5.5 0 0 1 .5-.5zm-2 0a.5.5 0 0 0-.5.5V3h1.5a.5.5 0 0 0 0-1H1v-1.5a.5.5 0 0 0-.5-.5zM1 3a.5.5 0 0 1 .5-.5H3V1.5a.5.5 0 0 1 1 0V2.5h1.5a.5.5 0 0 1 0 1H4v1.5a.5.5 0 0 1-1 0V3H1.5a.5.5 0 0 1-.5-.5zM14 3a.5.5 0 0 1-.5-.5H12V1.5a.5.5 0 0 1 1 0V2.5h1.5a.5.5 0 0 1 0 1H13v1.5a.5.5 0 0 1-1 0V3h-1.5a.5.5 0 0 1-.5-.5zM12.5 1.5a.5.5 0 0 0-.5.5V3h1.5a.5.5 0 0 0 0-1H13v-1.5a.5.5 0 0 0-.5-.5zM14 1a.5.5 0 0 1 .5.5V3h-1.5a.5.5 0 0 1 0-1H15v-1.5a.5.5 0 0 1-.5-.5zM15 12a.5.5 0 0 1-.5.5H13v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H12v-1.5a.5.5 0 0 1 1 0V12h1.5a.5.5 0 0 1 .5.5zM13.5 14.5a.5.5 0 0 0-.5-.5H12v-1.5a.5.5 0 0 0-1 0V14h-1.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V15h1.5a.5.5 0 0 0 0-1H14v-1.5a.5.5 0 0 0-.5-.5zM3 12a.5.5 0 0 1 .5.5H4v1.5a.5.5 0 0 1-1 0V13H1.5a.5.5 0 0 1 0-1H3v-1.5a.5.5 0 0 1 1 0V12H3.5a.5.5 0 0 1-.5-.5zM1.5 14.5a.5.5 0 0 0 .5-.5H3v-1.5a.5.5 0 0 0-1 0V14H1.5a.5.5 0 0 0 0 .5zM.5 12a.5.5 0 0 0 .5.5H2v1.5a.5.5 0 0 0 1 0V13h1.5a.5.5 0 0 0 0-1H3v-1.5a.5.5 0 0 0-1 0V12H.5z" />
+                </svg>
+                Full Crop
+            </button>
         </div>
 
-        <div class="mb-3" v-if="textInput.trim()">
-            <button @click="copyText" class="btn btn-success copy-btn">📋 Salin Teks</button>
+
+        <div class="mb-3">
+            <label for="textInput" class="form-label">Teks Input:</label>
+            <textarea v-model="textInput" rows="7" placeholder="Atau tulis/ubah teks manual di sini..."
+                class="form-control" id="textInput"></textarea>
         </div>
 
-        <div class="form-group">
-            <label>🔍 Pilih Jenis Analisis:</label>
-            <select class="form-control" v-model="selectedType">
+        <div class="mb-4" v-if="textInput.trim()">
+            <button @click="copyText" class="btn btn-success w-100">📋 Salin Teks Input</button>
+        </div>
+
+        <div class="mb-4">
+            <label for="selectedType" class="form-label">🔍 Pilih Jenis Analisis:</label>
+            <select class="form-select" v-model="selectedType" id="selectedType">
                 <option value="summarize">📌 Ringkas / Jelaskan</option>
                 <option value="kesimpulan">🧠 Buat Kesimpulan</option>
                 <option value="translate">🌍 Terjemahkan</option>
@@ -304,55 +436,56 @@
             </select>
         </div>
 
-        <button @click="analyzeContent" :class="{'btn btn-primary': !loading, 'btn btn-primary loading': loading}">
-            <span v-if="!loading">🔍 Analisis dengan Gemini</span>
-            <span v-else>⏳ Menganalisis...</span>
-        </button>
+        <div class="d-grid mb-4">
+            <button @click="analyzeContent"
+                :class="{'btn btn-primary': !loading, 'btn btn-primary loading': loading, 'w-100': true}">
+                <span v-if="!loading">🔍 Analisis dengan Gemini</span>
+                <span v-else>⏳ Menganalisis...</span>
+            </button>
+        </div>
 
-        <div v-if="loading" class="mt-3">⏳ Menganalisis...</div>
+        <div v-if="loading" class="alert alert-info text-center" role="alert">⏳ Menganalisis...</div>
 
         <div v-if="summary" class="result-box mt-3">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <button @click="copySumary" class="btn btn-success copy-btn">📋 Salin Teks Hasil</button>
-                <button @click="startReading" class="ml-5 btn btn-primary">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+                <button @click="copySumary" class="btn btn-success flex-fill me-md-2 mb-2 mb-md-0">📋 Salin Teks
+                    Hasil</button>
+                <button @click="startReading" class="btn btn-primary flex-fill">
                     <span v-if="!speaking">🔈 Baca Kesimpulan</span>
                     <span v-else>❚❚ Berhenti Membaca</span>
                 </button>
             </div>
             <div><strong>📚 Hasil Analisis:</strong></div>
-            <div v-html="formattedSummary"></div>
+            <div v-html="formattedSummary" class="mb-3"></div>
 
             <div class="tts-controls">
                 <label for="readingRate">Kecepatan Membaca:</label>
-                <input type="range" id="readingRate" v-model="readingRate" min="0.5" max="2" step="0.1" @input="updateReadingRate">
+                <input type="range" id="readingRate" v-model="readingRate" min="0.5" max="2" step="0.1"
+                    @input="updateReadingRate">
                 <span>{{ readingRate }}x</span>
             </div>
         </div>
 
 
-        <p v-if="speaking" class="status-message">
+        <p v-if="speaking" class="status-message alert alert-info">
             Membaca kalimat:
         </p>
-        <p v-else-if="summary.trim() && !speaking && currentSentenceIndex > 0" class="status-message">
+        <p v-else-if="summary.trim() && !speaking && currentSentenceIndex > 0"
+            class="status-message alert alert-success">
             Pembacaan selesai.
         </p>
-        <p v-else-if="!summary.trim()" class="status-message">
+        <p v-else-if="!summary.trim()" class="status-message alert alert-secondary">
             Silakan masukkan teks untuk dibaca.
         </p>
 
         <div class="sentence-list">
             <h3>Daftar Kalimat:</h3>
-            <p v-if="sentences.length === 0 && summary.trim()">Tidak ada kalimat yang dapat dibaca setelah pemrosesan.</p>
-            <div
-                v-for="(sentence, index) in sentences"
-                :key="index"
-                :class="{
+            <p v-if="sentences.length === 0 && summary.trim()" class="alert alert-warning">Tidak ada kalimat yang dapat
+                dibaca setelah pemrosesan.</p>
+            <div v-for="(sentence, index) in sentences" :key="index" :class="{
                     'active-sentence': index === currentSentenceIndex && speaking,
                     'completed-sentence': index < currentSentenceIndex && !speaking && currentSentenceIndex > 0
-                }"
-                @click="jumpToSentence(index)"
-                class="sentence-item"
-            >
+                }" @click="jumpToSentence(index)" class="sentence-item">
                 {{ sentence }}
             </div>
         </div>
@@ -362,9 +495,11 @@
             <div class="api-input-box">
                 <h5>Masukkan API Key Gemini</h5>
                 <input type="text" v-model="apiKeyInput" placeholder="Masukkan API Key Gemini Anda"
-                    class="form-control mb-2" />
-                <button @click="saveApiKey" class="btn btn-primary mr-2">Simpan API Key</button>
-                <button @click="skipApiKey" class="btn btn-secondary">Lewati</button>
+                    class="form-control mb-3" />
+                <div class="d-grid gap-2">
+                    <button @click="saveApiKey" class="btn btn-primary">Simpan API Key</button>
+                    <button @click="skipApiKey" class="btn btn-secondary">Lewati</button>
+                </div>
             </div>
         </div>
     </div>
@@ -372,6 +507,9 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eJ7RVoC/fWA" crossorigin="anonymous">
+    </script>
     <script>
         new Vue({
             el: '#app',
@@ -403,9 +541,9 @@
                     if (!this.summary) return '';
                     // Menghilangkan semua asterisk dan mengganti baris baru dengan <br>
                     const plain = this.summary
-                        .replace(/\*\*(.*?)\*\*/g, '$1') // **teks** -> teks
-                        .replace(/\*(.*?)\*/g, '$1')     // *teks* -> teks
-                        .replace(/\n/g, '<br>');         // baris baru jadi <br>
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **teks** -> <strong>teks</strong>
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>') // *teks* -> <em>teks</em>
+                        .replace(/\n/g, '<br>'); // baris baru jadi <br>
                     return plain;
                 }
             },
@@ -429,10 +567,15 @@
                     }
 
                     // Bersihkan teks summary dari karakter asterisk (*) sebelum dipecah menjadi kalimat
-                    const cleanedSummary = this.summary.replace(/\*/g, '');
+                    // Menggunakan DOMParser untuk membersihkan HTML dan mendapatkan teks murni
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(this.formattedSummary, 'text/html');
+                    const cleanedSummary = doc.body.textContent || '';
+
 
                     // Pisahkan teks yang sudah bersih menjadi kalimat-kalimat.
-                    this.sentences = cleanedSummary.split(/(?<=[.?!])\s+/).filter(s => s.trim() !== '');
+                    // Perbaikan regex untuk memisahkan kalimat lebih baik
+                    this.sentences = cleanedSummary.split(/(?<=[.?!])\s*|\n(?=\S)/).filter(s => s.trim() !== '');
 
                     // Jika setelah pembersihan dan pemisahan tidak ada kalimat yang valid, hentikan.
                     if (this.sentences.length === 0) {
@@ -507,9 +650,12 @@
 
                 updateReadingRate() {
                     // Jika sedang berbicara, hentikan pembacaan saat ini dan mulai lagi dengan kecepatan baru
+                    // Ini penting agar perubahan kecepatan langsung terasa
                     if (this.speaking) {
                         window.speechSynthesis.cancel();
-                        this.readNextSentence(); // Mulai ulang kalimat saat ini dengan kecepatan baru
+                        // Kita perlu memastikan kalimat saat ini dibaca ulang dengan rate baru
+                        // Maka, kita panggil readNextSentence() tanpa mengubah currentSentenceIndex
+                        this.readNextSentence();
                     }
                 },
                 // --- AKHIR METODE TEXT-TO-SPEECH ---
@@ -549,8 +695,8 @@
                 pasteFromClipboard() {
                     navigator.clipboard.read()
                         .then(items => {
-                            items.forEach(item => {
-                                // Prefer image/png but also check image/jpeg
+                            let imageFound = false;
+                            for (const item of items) {
                                 if (item.types.includes('image/png')) {
                                     item.getType('image/png').then(blob => {
                                         const reader = new FileReader();
@@ -560,6 +706,8 @@
                                         };
                                         reader.readAsDataURL(blob);
                                     });
+                                    imageFound = true;
+                                    break; // Berhenti setelah menemukan gambar PNG
                                 } else if (item.types.includes('image/jpeg')) {
                                     item.getType('image/jpeg').then(blob => {
                                         const reader = new FileReader();
@@ -569,10 +717,13 @@
                                         };
                                         reader.readAsDataURL(blob);
                                     });
-                                } else {
-                                    alert('❌ Tidak ada data gambar yang ditemukan di clipboard (hanya PNG/JPEG yang didukung).');
+                                    imageFound = true;
+                                    break; // Berhenti setelah menemukan gambar JPEG
                                 }
-                            });
+                            }
+                            if (!imageFound) {
+                                alert('❌ Tidak ada data gambar yang ditemukan di clipboard (hanya PNG/JPEG yang didukung).');
+                            }
                         })
                         .catch(err => {
                             console.error('Gagal membaca clipboard: ', err);
@@ -772,7 +923,12 @@ Berikut teksnya:\n\n${text}`;
                 },
                 copySumary() {
                     // Salin teks dari summary (hasil analisis Gemini)
-                    navigator.clipboard.writeText(this.summary)
+                    // Gunakan DOMParser untuk mendapatkan teks murni tanpa tag HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(this.formattedSummary, 'text/html');
+                    const textToCopy = doc.body.textContent || '';
+
+                    navigator.clipboard.writeText(textToCopy)
                         .then(() => alert("✅ Teks hasil analisis berhasil disalin!"))
                         .catch(err => alert("❌ Gagal menyalin teks: " + err));
                 },
