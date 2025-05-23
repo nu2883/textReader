@@ -1,17 +1,55 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Text Reader Gemini</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+        integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css" />
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 1rem; background: #f5f5f5; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        textarea, input[type='file'], select { width: 100%; margin: 1rem 0; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 0.25rem; box-sizing: border-box; }
-        img { max-width: 100%; display: block; margin: auto; }
-        button.btn { margin: 0.5rem 0; border-radius: 0.25rem; cursor: pointer; position: relative; overflow: hidden; }
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 1rem;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        textarea,
+        input[type='file'],
+        select {
+            width: 100%;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            box-sizing: border-box;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+            margin: auto;
+        }
+
+        button.btn {
+            margin: 0.5rem 0;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
         button.btn.loading::after {
             content: '';
             display: block;
@@ -26,15 +64,45 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
-        .result-box { white-space: pre-wrap; background: #f0f0f0; padding: 1rem; border-radius: 5px; margin-top: 1rem; }
-        .remove-api { background-color: #dc3545; border-color: #dc3545; }
-        .remove-api:hover { background-color: #c82333; border-color: #bd2130; }
-        .copy-btn { background-color: #28a745; border-color: #28a745; }
-        .copy-btn:hover { background-color: #218838; border-color: #1e7e34; }
+
+        .result-box {
+            white-space: pre-wrap;
+            background: #f0f0f0;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+
+        .remove-api {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .remove-api:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+
+        .copy-btn {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+
+        .copy-btn:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+
         .api-input-overlay {
             position: fixed;
             top: 0;
@@ -47,6 +115,7 @@
             align-items: center;
             z-index: 1000;
         }
+
         .api-input-box {
             background-color: white;
             padding: 20px;
@@ -54,6 +123,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
             text-align: center;
         }
+
         .api-input-box input[type="text"] {
             width: 100%;
             padding: 0.5rem;
@@ -62,14 +132,108 @@
             border-radius: 0.25rem;
             box-sizing: border-box;
         }
+
         .hidden {
             display: none !important;
         }
+
         .paste-button-container {
             margin-bottom: 1rem;
         }
+
+        /* --- Gaya Baru untuk Text-to-Speech Highlighting --- */
+        .sentence-list {
+            margin-top: 30px;
+            text-align: left;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .sentence-list h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .sentence-item {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            line-height: 1.5;
+        }
+
+        .sentence-item:hover {
+            background-color: #e9e9e9;
+            border-color: #d0d0d0;
+        }
+
+        .active-sentence {
+            background-color: #e0f7fa;
+            border-color: #00bcd4;
+            font-weight: bold;
+            color: #00796b;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .completed-sentence {
+            background-color: #e8f5e9;
+            border-color: #4caf50;
+            color: #555;
+        }
+
+        .tts-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Spasi antar elemen kontrol */
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background-color: #f8f8f8;
+        }
+
+        .tts-controls label {
+            margin-bottom: 0; /* Hapus margin bawah default label */
+            font-weight: bold;
+        }
+
+        .tts-controls input[type="range"] {
+            flex-grow: 1; /* Slider akan mengisi ruang yang tersedia */
+            -webkit-appearance: none; /* Hapus gaya default WebKit */
+            width: 100%;
+            height: 8px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+            border-radius: 5px;
+        }
+
+        .tts-controls input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+        }
+
+        .tts-controls input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+        }
+        /* --- Akhir Gaya Baru --- */
     </style>
 </head>
+
 <body>
     <div id="app" class="container">
         <h2 class="d-flex justify-content-between align-items-center mb-3">
@@ -86,55 +250,119 @@
 
         <div class="form-group paste-button-container">
             <button @click="pasteFromClipboard" class="btn btn-info btn-block">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check mr-2" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
-                    <path d="M4 1.5H3a2 2 0 0 0-2 2V12a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-                    <path d="M9 1a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v9a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h1V2a1 1 0 0 1 1-1h2z"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-clipboard-check mr-2" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z" />
+                    <path
+                        d="M4 1.5H3a2 2 0 0 0-2 2V12a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z" />
+                    <path
+                        d="M9 1a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v9a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h1V2a1 1 0 0 1 1-1h2z" />
                 </svg>
                 Tempel dari Clipboard (Gambar)
             </button>
         </div>
 
-       <div class="form-group">
-    <input type="file" accept="image/*" @change="onImageChange" class="form-control-file">
-</div>
+        <div class="form-group">
+            <input type="file" accept="image/*" @change="onImageChange" class="form-control-file">
+        </div>
 
         <canvas id="canvas" style="display:none;"></canvas>
         <img id="image" v-show="showCropper" class="mb-2" />
-        <button v-if="showCropper" @click="cropAndRecognize" :class="{'btn-primary': !isCropping, 'btn-primary loading': isCropping}">
+        <button v-if="showCropper" @click="cropAndRecognize"
+            :class="{'btn-primary': !isCropping, 'btn-primary loading': isCropping}">
             <span v-if="!isCropping">📐 Crop & OCR</span>
             <span v-else>⏳ Processing...</span>
         </button>
         <button v-if="showCropper" @click="fullCrop" class="btn btn-secondary ml-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-crop mr-1" viewBox="0 0 16 16">
-                <path d="M3.5 1.5a.5.5 0 0 1 .5.5V3h-1.5a.5.5 0 0 1 0-1H3v-1.5a.5.5 0 0 1 .5-.5zm-2 0a.5.5 0 0 0-.5.5V3h1.5a.5.5 0 0 0 0-1H1v-1.5a.5.5 0 0 0-.5-.5zM1 3a.5.5 0 0 1 .5-.5H3V1.5a.5.5 0 0 1 1 0V2.5h1.5a.5.5 0 0 1 0 1H4v1.5a.5.5 0 0 1-1 0V3H1.5a.5.5 0 0 1-.5-.5zM14 3a.5.5 0 0 1-.5-.5H12V1.5a.5.5 0 0 1 1 0V2.5h1.5a.5.5 0 0 1 0 1H13v1.5a.5.5 0 0 1-1 0V3h-1.5a.5.5 0 0 1-.5-.5zM12.5 1.5a.5.5 0 0 0-.5.5V3h1.5a.5.5 0 0 0 0-1H13v-1.5a.5.5 0 0 0-.5-.5zM14 1a.5.5 0 0 1 .5.5V3h-1.5a.5.5 0 0 1 0-1H15v-1.5a.5.5 0 0 1-.5-.5zM15 12a.5.5 0 0 1-.5.5H13v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H12v-1.5a.5.5 0 0 1 1 0V12h1.5a.5.5 0 0 1 .5.5zM13.5 14.5a.5.5 0 0 0-.5-.5H12v-1.5a.5.5 0 0 0-1 0V14h-1.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V15h1.5a.5.5 0 0 0 0-1H14v-1.5a.5.5 0 0 0-.5-.5zM3 12a.5.5 0 0 1 .5.5H4v1.5a.5.5 0 0 1-1 0V13H1.5a.5.5 0 0 1 0-1H3v-1.5a.5.5 0 0 1 1 0V12H3.5a.5.5 0 0 1-.5-.5zM1.5 14.5a.5.5 0 0 0 .5-.5H3v-1.5a.5.5 0 0 0-1 0V14H1.5a.5.5 0 0 0 0 .5zM.5 12a.5.5 0 0 0 .5.5H2v1.5a.5.5 0 0 0 1 0V13h1.5a.5.5 0 0 0 0-1H3v-1.5a.5.5 0 0 0-1 0V12H.5z"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-crop mr-1"
+                viewBox="0 0 16 16">
+                <path
+                    d="M3.5 1.5a.5.5 0 0 1 .5.5V3h-1.5a.5.5 0 0 1 0-1H3v-1.5a.5.5 0 0 1 .5-.5zm-2 0a.5.5 0 0 0-.5.5V3h1.5a.5.5 0 0 0 0-1H1v-1.5a.5.5 0 0 0-.5-.5zM1 3a.5.5 0 0 1 .5-.5H3V1.5a.5.5 0 0 1 1 0V2.5h1.5a.5.5 0 0 1 0 1H4v1.5a.5.5 0 0 1-1 0V3H1.5a.5.5 0 0 1-.5-.5zM14 3a.5.5 0 0 1-.5-.5H12V1.5a.5.5 0 0 1 1 0V2.5h1.5a.5.5 0 0 1 0 1H13v1.5a.5.5 0 0 1-1 0V3h-1.5a.5.5 0 0 1-.5-.5zM12.5 1.5a.5.5 0 0 0-.5.5V3h1.5a.5.5 0 0 0 0-1H13v-1.5a.5.5 0 0 0-.5-.5zM14 1a.5.5 0 0 1 .5.5V3h-1.5a.5.5 0 0 1 0-1H15v-1.5a.5.5 0 0 1-.5-.5zM15 12a.5.5 0 0 1-.5.5H13v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H12v-1.5a.5.5 0 0 1 1 0V12h1.5a.5.5 0 0 1 .5.5zM13.5 14.5a.5.5 0 0 0-.5-.5H12v-1.5a.5.5 0 0 0-1 0V14h-1.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V15h1.5a.5.5 0 0 0 0-1H14v-1.5a.5.5 0 0 0-.5-.5zM3 12a.5.5 0 0 1 .5.5H4v1.5a.5.5 0 0 1-1 0V13H1.5a.5.5 0 0 1 0-1H3v-1.5a.5.5 0 0 1 1 0V12H3.5a.5.5 0 0 1-.5-.5zM1.5 14.5a.5.5 0 0 0 .5-.5H3v-1.5a.5.5 0 0 0-1 0V14H1.5a.5.5 0 0 0 0 .5zM.5 12a.5.5 0 0 0 .5.5H2v1.5a.5.5 0 0 0 1 0V13h1.5a.5.5 0 0 0 0-1H3v-1.5a.5.5 0 0 0-1 0V12H.5z" />
             </svg>
             Full Crop
         </button>
 
         <div class="form-group">
-            <textarea v-model="textInput" rows="5" placeholder="Atau tulis/ubah teks manual di sini..." class="form-control"></textarea>
+            <textarea v-model="textInput" rows="5" placeholder="Atau tulis/ubah teks manual di sini..."
+                class="form-control"></textarea>
         </div>
 
         <div class="mb-3" v-if="textInput.trim()">
             <button @click="copyText" class="btn btn-success copy-btn">📋 Salin Teks</button>
         </div>
 
-        <button @click="analyzeContent" :class="{'btn-primary': !loading, 'btn-primary loading': loading}">
+        <div class="form-group">
+            <label>🔍 Pilih Jenis Analisis:</label>
+            <select class="form-control" v-model="selectedType">
+                <option value="summarize">📌 Ringkas / Jelaskan</option>
+                <option value="kesimpulan">🧠 Buat Kesimpulan</option>
+                <option value="translate">🌍 Terjemahkan</option>
+                <option value="paraphrase">🔄 Parafrasekan</option>
+                <option value="grammar">✍️ Koreksi Grammar</option>
+                <option value="nahwu">📖 Analisis Nahwu</option>
+            </select>
+        </div>
+
+        <button @click="analyzeContent" :class="{'btn btn-primary': !loading, 'btn btn-primary loading': loading}">
             <span v-if="!loading">🔍 Analisis dengan Gemini</span>
             <span v-else>⏳ Menganalisis...</span>
         </button>
 
         <div v-if="loading" class="mt-3">⏳ Menganalisis...</div>
+
         <div v-if="summary" class="result-box mt-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button @click="copySumary" class="btn btn-success copy-btn">📋 Salin Teks Hasil</button>
+                <button @click="startReading" class="ml-5 btn btn-primary">
+                    <span v-if="!speaking">🔈 Baca Kesimpulan</span>
+                    <span v-else>❚❚ Berhenti Membaca</span>
+                </button>
+            </div>
             <div><strong>📚 Hasil Analisis:</strong></div>
             <div v-html="formattedSummary"></div>
+
+            <div class="tts-controls">
+                <label for="readingRate">Kecepatan Membaca:</label>
+                <input type="range" id="readingRate" v-model="readingRate" min="0.5" max="2" step="0.1" @input="updateReadingRate">
+                <span>{{ readingRate }}x</span>
+            </div>
         </div>
+
+
+        <p v-if="speaking" class="status-message">
+            Membaca kalimat:
+        </p>
+        <p v-else-if="summary.trim() && !speaking && currentSentenceIndex > 0" class="status-message">
+            Pembacaan selesai.
+        </p>
+        <p v-else-if="!summary.trim()" class="status-message">
+            Silakan masukkan teks untuk dibaca.
+        </p>
+
+        <div class="sentence-list">
+            <h3>Daftar Kalimat:</h3>
+            <p v-if="sentences.length === 0 && summary.trim()">Tidak ada kalimat yang dapat dibaca setelah pemrosesan.</p>
+            <div
+                v-for="(sentence, index) in sentences"
+                :key="index"
+                :class="{
+                    'active-sentence': index === currentSentenceIndex && speaking,
+                    'completed-sentence': index < currentSentenceIndex && !speaking && currentSentenceIndex > 0
+                }"
+                @click="jumpToSentence(index)"
+                class="sentence-item"
+            >
+                {{ sentence }}
+            </div>
+        </div>
+
 
         <div v-if="!apiKey && showApiKeyInput" class="api-input-overlay">
             <div class="api-input-box">
                 <h5>Masukkan API Key Gemini</h5>
-                <input type="text" v-model="apiKeyInput" placeholder="Masukkan API Key Gemini Anda" class="form-control mb-2" />
+                <input type="text" v-model="apiKeyInput" placeholder="Masukkan API Key Gemini Anda"
+                    class="form-control mb-2" />
                 <button @click="saveApiKey" class="btn btn-primary mr-2">Simpan API Key</button>
                 <button @click="skipApiKey" class="btn btn-secondary">Lewati</button>
             </div>
@@ -157,22 +385,136 @@
                 apiKeyInput: '',
                 ocrLang: 'ara', // OCR language for Arabic (default)
                 apiKeySkipped: localStorage.getItem('gemini_api_skipped') === 'true' || false,
-                showApiKeyInput: false,
+                showApiKeyInput: true,
                 isCropping: false, // State untuk animasi Crop & OCR
                 isCameraImage: false, // State untuk menandai gambar dari kamera
                 pastedImage: null, // State untuk menyimpan data URL gambar yang di-paste
+                selectedType: 'summarize', // default
+
+                // --- DATA BARU UNTUK TEXT-TO-SPEECH ---
+                sentences: [], // Array untuk menyimpan kalimat-kalimat yang sudah dipisah
+                currentSentenceIndex: 0, // Indeks kalimat yang sedang dibaca/diproses
+                speaking: false, // Status apakah pembacaan sedang berlangsung
+                readingRate: 1.0, // Kecepatan membaca, default 1.0 (normal)
+                // --- AKHIR DATA BARU ---
             },
             computed: {
                 formattedSummary() {
                     if (!this.summary) return '';
-                    const formattedText = this.summary
-                        .replace(/\*\*\*/g, '')
-                        .replace(/(^|\n)([^\n]+):/g, '<strong>$2</strong>:')
-                        .replace(/\n/g, '<br />');
-                    return formattedText;
+                    // Menghilangkan semua asterisk dan mengganti baris baru dengan <br>
+                    const plain = this.summary
+                        .replace(/\*\*(.*?)\*\*/g, '$1') // **teks** -> teks
+                        .replace(/\*(.*?)\*/g, '$1')     // *teks* -> teks
+                        .replace(/\n/g, '<br>');         // baris baru jadi <br>
+                    return plain;
                 }
             },
             methods: {
+                // --- METODE TEXT-TO-SPEECH ---
+                startReading() {
+                    if (this.speaking) {
+                        // Jika sedang berbicara, hentikan
+                        this.stopReading();
+                        return;
+                    }
+
+                    // Hentikan pembacaan sebelumnya jika ada, agar tidak tumpang tindih
+                    window.speechSynthesis.cancel();
+
+                    // Periksa apakah ada teks di dalam summary (hasil analisis Gemini)
+                    if (!this.summary.trim()) {
+                        console.warn("Tidak ada teks di 'Hasil Analisis' untuk dibaca.");
+                        alert("Mohon lakukan analisis teks terlebih dahulu atau masukkan teks di 'Hasil Analisis'.");
+                        return;
+                    }
+
+                    // Bersihkan teks summary dari karakter asterisk (*) sebelum dipecah menjadi kalimat
+                    const cleanedSummary = this.summary.replace(/\*/g, '');
+
+                    // Pisahkan teks yang sudah bersih menjadi kalimat-kalimat.
+                    this.sentences = cleanedSummary.split(/(?<=[.?!])\s+/).filter(s => s.trim() !== '');
+
+                    // Jika setelah pembersihan dan pemisahan tidak ada kalimat yang valid, hentikan.
+                    if (this.sentences.length === 0) {
+                        console.warn("Teks yang dimasukkan tidak mengandung kalimat yang dapat dibaca.");
+                        alert("Teks tidak dapat diproses menjadi kalimat yang valid untuk dibaca.");
+                        return;
+                    }
+
+                    // Atur indeks kalimat yang akan dibaca menjadi awal (kalimat pertama)
+                    this.currentSentenceIndex = 0;
+                    // Set status `speaking` menjadi true, menandakan pembacaan sedang berlangsung
+                    this.speaking = true;
+
+                    // Mulai proses pembacaan kalimat pertama
+                    this.readNextSentence();
+                },
+
+                readNextSentence() {
+                    // Jika semua kalimat sudah dibaca, hentikan proses
+                    if (this.currentSentenceIndex >= this.sentences.length) {
+                        this.speaking = false; // Set status menjadi tidak membaca
+                        console.log("Pembacaan selesai.");
+                        return;
+                    }
+
+                    const sentence = this.sentences[this.currentSentenceIndex];
+                    // Pastikan kalimat tidak kosong setelah trim. Jika kosong, lompat.
+                    if (!sentence.trim()) {
+                        this.currentSentenceIndex++;
+                        this.readNextSentence(); // Lewati kalimat kosong
+                        return;
+                    }
+
+                    const utterance = new SpeechSynthesisUtterance(sentence);
+                    utterance.lang = 'id-ID'; // Set bahasa ke Bahasa Indonesia
+                    utterance.rate = this.readingRate; // Gunakan nilai kecepatan dari data Vue
+
+                    // Event handler ketika satu kalimat selesai dibaca
+                    utterance.onend = () => {
+                        this.currentSentenceIndex++; // Pindah ke kalimat berikutnya
+                        this.readNextSentence(); // Panggil lagi untuk membaca kalimat berikutnya
+                    };
+
+                    // Event handler jika terjadi error saat pembacaan
+                    utterance.onerror = (event) => {
+                        console.error("Kesalahan dalam sintesis suara:", event.error);
+                        this.speaking = false; // Hentikan pembacaan jika ada error
+                        alert("Terjadi kesalahan saat membaca. Pembacaan dihentikan.");
+                    };
+
+                    // Mulai membaca kalimat
+                    window.speechSynthesis.speak(utterance);
+                },
+
+                stopReading() {
+                    // Hentikan semua pembacaan yang sedang berlangsung
+                    window.speechSynthesis.cancel();
+                    this.speaking = false; // Set status menjadi tidak membaca
+                    console.log("Pembacaan dihentikan.");
+                },
+
+                // Melompat dan memulai pembacaan dari kalimat tertentu yang diklik
+                jumpToSentence(index) {
+                    // Pastikan indeks valid
+                    if (index >= 0 && index < this.sentences.length) {
+                        window.speechSynthesis.cancel(); // Hentikan pembacaan yang sedang berjalan
+                        this.currentSentenceIndex = index; // Set indeks ke kalimat yang diklik
+                        this.speaking = true; // Set status sedang membaca
+                        this.readNextSentence(); // Mulai membaca dari kalimat tersebut
+                    }
+                },
+
+                updateReadingRate() {
+                    // Jika sedang berbicara, hentikan pembacaan saat ini dan mulai lagi dengan kecepatan baru
+                    if (this.speaking) {
+                        window.speechSynthesis.cancel();
+                        this.readNextSentence(); // Mulai ulang kalimat saat ini dengan kecepatan baru
+                    }
+                },
+                // --- AKHIR METODE TEXT-TO-SPEECH ---
+
+
                 saveApiKey() {
                     if (!this.apiKeyInput.trim()) {
                         alert("API Key tidak boleh kosong.");
@@ -183,7 +525,7 @@
                     this.apiKeySkipped = false;
                     localStorage.removeItem('gemini_api_skipped');
                     this.showApiKeyInput = false;
-                    this.analyzeContent();
+                    this.analyzeContent(); // Coba analisis lagi setelah API Key disimpan
                 },
                 skipApiKey() {
                     this.apiKeySkipped = true;
@@ -195,6 +537,10 @@
                     this.apiKey = '';
                     this.apiKeySkipped = false;
                     localStorage.removeItem('gemini_api_skipped');
+                    this.summary = ''; // Bersihkan hasil analisis saat API key dihapus
+                    this.sentences = []; // Bersihkan juga daftar kalimat TTS
+                    this.speaking = false; // Hentikan TTS jika sedang berjalan
+                    window.speechSynthesis.cancel();
                 },
                 onImageChange(event) {
                     const file = event.target.files[0];
@@ -204,13 +550,14 @@
                     navigator.clipboard.read()
                         .then(items => {
                             items.forEach(item => {
+                                // Prefer image/png but also check image/jpeg
                                 if (item.types.includes('image/png')) {
                                     item.getType('image/png').then(blob => {
                                         const reader = new FileReader();
                                         reader.onload = (event) => {
                                             this.handleImage(event.target.result);
-                                            alert('✅ Gambar berhasil ditempel! Klik "Crop & OCR" untuk melanjutkan.');
-                                            };
+                                            alert('✅ Gambar PNG berhasil ditempel! Sesuaikan area potong atau klik "Crop & OCR".');
+                                        };
                                         reader.readAsDataURL(blob);
                                     });
                                 } else if (item.types.includes('image/jpeg')) {
@@ -218,46 +565,48 @@
                                         const reader = new FileReader();
                                         reader.onload = (event) => {
                                             this.handleImage(event.target.result);
-                                            alert('✅ Gambar berhasil ditempel! Klik "Crop & OCR" atau "Full Crop" untuk melanjutkan.');
+                                            alert('✅ Gambar JPEG berhasil ditempel! Sesuaikan area potong atau klik "Crop & OCR".');
                                         };
                                         reader.readAsDataURL(blob);
                                     });
                                 } else {
-                                    alert('❌ Tidak ada data gambar yang ditemukan di clipboard.');
+                                    alert('❌ Tidak ada data gambar yang ditemukan di clipboard (hanya PNG/JPEG yang didukung).');
                                 }
                             });
                         })
                         .catch(err => {
                             console.error('Gagal membaca clipboard: ', err);
-                            alert('❌ Gagal mengakses clipboard. Pastikan browser Anda mengizinkan akses clipboard.');
+                            alert('❌ Gagal mengakses clipboard. Pastikan browser Anda mengizinkan akses clipboard dan ada gambar di clipboard.');
                         });
                 },
                 handleImage(imageData) {
                     let imageUrl;
                     if (imageData instanceof File) {
                         imageUrl = URL.createObjectURL(imageData);
-                        this.isCameraImage = imageData.type.startsWith('image/');
+                        this.isCameraImage = imageData.type.startsWith('image/'); // Asumsi ini gambar dari kamera jika tipe image
                     } else {
-                        imageUrl = imageData;
-                        this.isCameraImage = false;
+                        imageUrl = imageData; // Ini berarti data URL dari clipboard
+                        this.isCameraImage = false; // Anggap bukan dari kamera jika dari clipboard
                     }
 
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.getElementById('canvas');
+                        // Set canvas dimensions to the natural image dimensions to ensure full quality for Cropper
                         canvas.width = img.naturalWidth;
                         canvas.height = img.naturalHeight;
 
                         const imageElement = document.getElementById('image');
-                        imageElement.src = img.src;
+                        imageElement.src = img.src; // Set source for the <img> element
 
+                        // Pastikan DOM sudah diperbarui sebelum menginisialisasi Cropper
                         this.$nextTick(() => {
-                            this.showCropper = true;
-                            if (this.cropper) this.cropper.destroy();
+                            this.showCropper = true; // Tampilkan elemen <img> untuk Cropper
+                            if (this.cropper) this.cropper.destroy(); // Hancurkan instance Cropper yang lama jika ada
                             this.cropper = new Cropper(imageElement, {
-                                aspectRatio: NaN,
-                                viewMode: 1,
-                                autoCropArea: 1,
+                                aspectRatio: NaN, // Bebas rasio
+                                viewMode: 1, // Batasi area potong ke kanvas
+                                autoCropArea: 1, // Otomatis pilih seluruh area
                                 movable: true,
                                 zoomable: true,
                                 cropBoxResizable: true,
@@ -273,32 +622,32 @@
                         return;
                     }
                     this.isCropping = true;
-                    const croppedCanvas = this.cropper.getCroppedCanvas();
+                    const croppedCanvas = this.cropper.getCroppedCanvas(); // Dapatkan kanvas yang sudah di-crop
+
+                    // Gambarkan croppedCanvas ke canvas yang tersembunyi
                     const canvas = document.getElementById('canvas');
                     const ctx = canvas.getContext('2d');
-
                     canvas.width = croppedCanvas.width;
                     canvas.height = croppedCanvas.height;
                     ctx.drawImage(croppedCanvas, 0, 0);
-                    this.showCropper = false;
-                    this.cropper.destroy();
 
-                    let imageToOcr = canvas.toDataURL();
+                    this.showCropper = false; // Sembunyikan Cropper
+                    this.cropper.destroy(); // Hancurkan instance Cropper
 
-                    // Resize jika gambar kemungkinan dari kamera (walaupun sekarang bisa dari clipboard juga)
-                    if (this.isCameraImage) {
-                        const MAX_WIDTH = 1200;
-                        const MAX_HEIGHT = 1200;
-                        let width = canvas.width;
-                        let height = canvas.height;
+                    let imageToOcr = canvas.toDataURL('image/png'); // Dapatkan data URL dari kanvas
 
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
+                    // Optional: Resize jika gambar sangat besar (untuk efisiensi OCR)
+                    const MAX_DIM = 2000; // Ukuran maksimum dimensi gambar (lebar atau tinggi)
+                    let width = canvas.width;
+                    let height = canvas.height;
+
+                    if (width > MAX_DIM || height > MAX_DIM) {
+                        if (width > height) {
+                            height *= MAX_DIM / width;
+                            width = MAX_DIM;
+                        } else {
+                            width *= MAX_DIM / height;
+                            height = MAX_DIM;
                         }
 
                         const resizingCanvas = document.createElement('canvas');
@@ -306,27 +655,29 @@
                         resizingCanvas.height = height;
                         const resizingCtx = resizingCanvas.getContext('2d');
                         resizingCtx.drawImage(canvas, 0, 0, width, height);
-                        imageToOcr = resizingCanvas.toDataURL();
+                        imageToOcr = resizingCanvas.toDataURL('image/png');
                     }
+
 
                     Tesseract.recognize(
                         imageToOcr,
                         this.ocrLang,
-                        { langPath: 'https://tessdata.projectnaptha.com/4.0.0_best/' }
+                        { langPath: 'https://tessdata.projectnaptha.com/4.0.0_best/' } // Path untuk data bahasa Tesseract
                     ).then(({ data: { text } }) => {
-                        this.textInput = text.trim();
+                        this.textInput = text.trim(); // Masukkan hasil OCR ke textInput
                     }).catch(err => {
                         console.error(err);
-                        alert("❌ Gagal melakukan OCR. Pastikan koneksi internet aktif.");
+                        alert("❌ Gagal melakukan OCR. Pastikan koneksi internet aktif dan gambar jelas.");
                     }).finally(() => {
-                        this.isCropping = false;
+                        this.isCropping = false; // Nonaktifkan status loading OCR
                     });
                 },
                 fullCrop() {
                     if (this.cropper) {
-                        this.cropper.reset(); // Reset the crop box to the initial full image
+                        this.cropper.reset(); // Mengatur ulang crop box ke gambar penuh
+                        alert('Area potong diatur ulang ke seluruh gambar. Klik "Crop & OCR" untuk memproses seluruh gambar.');
                     } else {
-                        alert('⚠️ Harap unggah gambar terlebih dahulu.');
+                        alert('⚠️ Harap unggah atau tempel gambar terlebih dahulu.');
                     }
                 },
                 async analyzeContent() {
@@ -338,8 +689,13 @@
                         alert("Masukkan teks terlebih dahulu.");
                         return;
                     }
+
                     this.loading = true;
-                    this.summary = '';
+                    this.summary = ''; // Bersihkan summary sebelumnya
+                    this.sentences = []; // Bersihkan kalimat TTS sebelumnya
+                    this.speaking = false;
+                    window.speechSynthesis.cancel();
+
                     const apiKeyToUse = this.apiKey;
                     if (!apiKeyToUse) {
                         this.summary = '⚠️ API Key Gemini belum diatur. Fitur analisis tidak dapat digunakan.';
@@ -347,24 +703,46 @@
                         this.showApiKeyInput = true;
                         return;
                     }
-                    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKeyToUse}`;
-                    const prompt = `Tolong jelaskan ayat atau teks berikut dengan jelas, dan mudah dipahami. Gunakan bahasa Indonesia yang enak dibaca, tidak perlu banyak tanda * . Buat formatnya seperti ini:
 
+                    // Tentukan prompt berdasarkan jenis analisis yang dipilih
+                    let prompt = '';
+                    const text = this.textInput; // Ambil teks dari textInput
 
-tulis ulang teks arabnya (dengan harokat kaidah nahwu yg benar),
+                    switch (this.selectedType) {
+                        case 'summarize':
+                            prompt = `Tolong jelaskan ayat atau teks berikut dengan jelas, dan mudah dipahami. Gunakan bahasa Indonesia yang enak dibaca, tidak perlu banyak tanda * . Buat formatnya seperti ini:
 
-Terjemahkan.
-
+Tulis ulang teks Arabnya (dengan harokat kaidah nahwu yg benar),
+Terjemahkan,
 Penjelasan ringkas (jika ada)
 
-pisahkan dengan 2 baris baru
+Pisahkan dengan 2 baris baru
 
 Pelajaran penting (dalam poin)
-pisahkan dengan 2 baris baru
 
+Berikut teksnya:\n\n${text}`;
+                            break;
+                        case 'kesimpulan':
+                            prompt = `Buat Kesimpulannya, terjemahkan teks berikut ke dalam Bahasa Indonesia secara akurat dan alami. Tuliskan kesimpulan dilanjutkan terjemahnya lengkapnya.:\n\n${text}`;
+                            break;
+                        case 'translate':
+                            prompt = `Terjemahkan teks berikut ke dalam Bahasa Indonesia secara akurat dan alami:\n\n${text}`;
+                            break;
+                        case 'paraphrase':
+                            prompt = `Parafrasekan teks berikut agar lebih mudah dipahami, tetap gunakan Bahasa Indonesia:\n\n${text}`;
+                            break;
+                        case 'grammar':
+                            prompt = `Periksa dan koreksi tata bahasa dari teks berikut. Jika ada kesalahan, tampilkan versi yang sudah dikoreksi dan jelaskan secara singkat:\n\n${text}`;
+                            break;
+                        case 'nahwu':
+                            prompt = `Berikan penjelasan nahwu dari text tersebut per kalimat untuk orang awam dengan lengkap dan mudah dipahami:\n\n${text}`;
+                            break;
+                        default:
+                            prompt = `Berikut teks yang ingin saya analisis:\n\n${text}`; // Default jika tidak ada yang cocok
+                    }
 
-Berikut teksnya:\n\n${this.textInput}`;
-
+                    // Kirim permintaan ke Gemini API
+                    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKeyToUse}`;
                     const requestBody = {
                         contents: [{ parts: [{ text: prompt }] }]
                     };
@@ -376,27 +754,56 @@ Berikut teksnya:\n\n${this.textInput}`;
                             body: JSON.stringify(requestBody)
                         });
                         const data = await res.json();
+                        // Ambil respons dari Gemini
                         this.summary = data.candidates?.[0]?.content?.parts?.[0]?.text || '❗ Tidak ada respons dari Gemini.';
                     } catch (err) {
                         console.error(err);
-                        this.summary = '❌ Terjadi kesalahan saat menghubungi Gemini API.';
+                        this.summary = '❌ Terjadi kesalahan saat menghubungi Gemini API. Pastikan API Key Anda benar dan koneksi internet stabil.';
                     } finally {
                         this.loading = false;
                     }
                 },
+
                 copyText() {
+                    // Salin teks dari textInput (teks mentah hasil OCR atau manual)
                     navigator.clipboard.writeText(this.textInput)
-                        // .then(() => alert("✅ Teks berhasil disalin!"))
+                        .then(() => alert("✅ Teks berhasil disalin!"))
                         .catch(err => alert("❌ Gagal menyalin teks: " + err));
                 },
-                mounted() {
-                    // Langsung tampilkan input API jika belum ada dan tidak di-skip
-                    if (!this.apiKey && !this.apiKeySkipped) {
-                        this.showApiKeyInput = true;
-                    }
+                copySumary() {
+                    // Salin teks dari summary (hasil analisis Gemini)
+                    navigator.clipboard.writeText(this.summary)
+                        .then(() => alert("✅ Teks hasil analisis berhasil disalin!"))
+                        .catch(err => alert("❌ Gagal menyalin teks: " + err));
+                },
+            },
+            // Lifecycle hook: Dipanggil setelah instance dibuat dan DOM di-mount
+            mounted() {
+                // Langsung tampilkan input API jika belum ada dan tidak di-skip
+                if (!this.apiKey && !this.apiKeySkipped) {
+                    this.showApiKeyInput = true;
                 }
+
+                // Inisialisasi onvoiceschanged listener untuk Web Speech API
+                window.speechSynthesis.onvoiceschanged = () => {
+                    const voices = window.speechSynthesis.getVoices();
+                    const indonesianVoice = voices.find(voice => voice.lang === 'id-ID');
+                    if (!indonesianVoice) {
+                        console.warn("Suara Bahasa Indonesia (id-ID) tidak ditemukan. Pembacaan mungkin gagal atau menggunakan suara default.");
+                    } else {
+                        console.log("Suara Bahasa Indonesia ditemukan:", indonesianVoice.name);
+                    }
+                };
+                // Panggil getVoices() agar event onvoiceschanged terpicu jika sudah siap
+                window.speechSynthesis.getVoices();
+            },
+            // Lifecycle hook: Dipanggil sebelum komponen dihancurkan
+            beforeDestroy() {
+                // Pastikan untuk menghentikan semua pembacaan saat komponen tidak lagi ada
+                window.speechSynthesis.cancel();
             }
         });
     </script>
 </body>
+
 </html>
