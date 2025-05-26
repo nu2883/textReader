@@ -187,7 +187,8 @@
         .tts-controls {
             display: flex;
             align-items: center;
-            gap: 15px; /* Spasi antar elemen kontrol */
+            gap: 15px;
+            /* Spasi antar elemen kontrol */
             margin-top: 15px;
             padding: 10px;
             border: 1px solid #eee;
@@ -196,13 +197,16 @@
         }
 
         .tts-controls label {
-            margin-bottom: 0; /* Hapus margin bawah default label */
+            margin-bottom: 0;
+            /* Hapus margin bawah default label */
             font-weight: bold;
         }
 
         .tts-controls input[type="range"] {
-            flex-grow: 1; /* Slider akan mengisi ruang yang tersedia */
-            -webkit-appearance: none; /* Hapus gaya default WebKit */
+            flex-grow: 1;
+            /* Slider akan mengisi ruang yang tersedia */
+            -webkit-appearance: none;
+            /* Hapus gaya default WebKit */
             width: 100%;
             height: 8px;
             background: #d3d3d3;
@@ -230,6 +234,7 @@
             background: #007bff;
             cursor: pointer;
         }
+
         /* --- Akhir Gaya Baru --- */
     </style>
 </head>
@@ -295,6 +300,7 @@
         <div class="form-group">
             <label>🔍 Pilih Jenis Analisis:</label>
             <select class="form-control" v-model="selectedType">
+                <option value="nahwu1">📖 Analisis Nahwu kata</option>
                 <option value="summarize">📌 Ringkas / Jelaskan</option>
                 <option value="kesimpulan">🧠 Buat Kesimpulan</option>
                 <option value="translate">🌍 Terjemahkan</option>
@@ -324,7 +330,8 @@
 
             <div class="tts-controls">
                 <label for="readingRate">Kecepatan Membaca:</label>
-                <input type="range" id="readingRate" v-model="readingRate" min="0.5" max="2" step="0.1" @input="updateReadingRate">
+                <input type="range" id="readingRate" v-model="readingRate" min="0.5" max="2" step="0.1"
+                    @input="updateReadingRate">
                 <span>{{ readingRate }}x</span>
             </div>
         </div>
@@ -342,17 +349,12 @@
 
         <div class="sentence-list">
             <h3>Daftar Kalimat:</h3>
-            <p v-if="sentences.length === 0 && summary.trim()">Tidak ada kalimat yang dapat dibaca setelah pemrosesan.</p>
-            <div
-                v-for="(sentence, index) in sentences"
-                :key="index"
-                :class="{
+            <p v-if="sentences.length === 0 && summary.trim()">Tidak ada kalimat yang dapat dibaca setelah pemrosesan.
+            </p>
+            <div v-for="(sentence, index) in sentences" :key="index" :class="{
                     'active-sentence': index === currentSentenceIndex && speaking,
                     'completed-sentence': index < currentSentenceIndex && !speaking && currentSentenceIndex > 0
-                }"
-                @click="jumpToSentence(index)"
-                class="sentence-item"
-            >
+                }" @click="jumpToSentence(index)" class="sentence-item">
                 {{ sentence }}
             </div>
         </div>
@@ -389,7 +391,7 @@
                 isCropping: false, // State untuk animasi Crop & OCR
                 isCameraImage: false, // State untuk menandai gambar dari kamera
                 pastedImage: null, // State untuk menyimpan data URL gambar yang di-paste
-                selectedType: 'summarize', // default
+                selectedType: 'nahwu1', // default
 
                 // --- DATA BARU UNTUK TEXT-TO-SPEECH ---
                 sentences: [], // Array untuk menyimpan kalimat-kalimat yang sudah dipisah
@@ -428,8 +430,8 @@
                         return;
                     }
 
-                    // Bersihkan teks summary dari karakter asterisk (*) sebelum dipecah menjadi kalimat
-                    const cleanedSummary = this.summary.replace(/\*/g, '');
+                    // Clean summary text by replacing asterisks and the word "Artinya" with spaces before splitting into sentences
+                    const cleanedSummary = this.summary.replace(/\*/g, '').replace(/Artinya/g, ' ');
 
                     // Pisahkan teks yang sudah bersih menjadi kalimat-kalimat.
                     this.sentences = cleanedSummary.split(/(?<=[.?!])\s+/).filter(s => s.trim() !== '');
@@ -480,7 +482,7 @@
                     utterance.onerror = (event) => {
                         console.error("Kesalahan dalam sintesis suara:", event.error);
                         this.speaking = false; // Hentikan pembacaan jika ada error
-                        alert("Terjadi kesalahan saat membaca. Pembacaan dihentikan.");
+                        // alert("Terjadi kesalahan saat membaca. Pembacaan dihentikan.");
                     };
 
                     // Mulai membaca kalimat
@@ -714,7 +716,7 @@
 
 Tulis ulang teks Arabnya (dengan harokat kaidah nahwu yg benar),
 Terjemahkan,
-Penjelasan ringkas (jika ada)
+Penjelasan ringkas (sesuai pemahaman ulama salaf dengan referensi yang jelas)
 
 Pisahkan dengan 2 baris baru
 
@@ -735,8 +737,13 @@ Berikut teksnya:\n\n${text}`;
                             prompt = `Periksa dan koreksi tata bahasa dari teks berikut. Jika ada kesalahan, tampilkan versi yang sudah dikoreksi dan jelaskan secara singkat:\n\n${text}`;
                             break;
                         case 'nahwu':
-                            prompt = `Berikan penjelasan nahwu dari text tersebut per kalimat untuk orang awam dengan lengkap dan mudah dipahami:\n\n${text}`;
+                            prompt = `Berikan penjelasan nahwu dari text tersebut per kalimat untuk orang awam dengan ringkas dan mudah dipahami (arab dan latin), jangan ada tanda * :\n\n${text}`;
                             break;
+                            case 'nahwu1':
+                            prompt = `Mohon artikan kalimat berikut kata per kata, dengan format:
+Kata Arab, Transliterasi Latin, Arti, Kedudukan Kata dalam Kalimat dalam bahasa arab (akhiri dengan tanda !). setelah itu arti kalimat tersebut keseluruhan. diakhiri kesimpulan seluruh text arab tersebut.:\n\n${text}`;
+                            break;
+
                         default:
                             prompt = `Berikut teks yang ingin saya analisis:\n\n${text}`; // Default jika tidak ada yang cocok
                     }
