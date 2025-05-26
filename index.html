@@ -740,8 +740,17 @@ Berikut teksnya:\n\n${text}`;
                             prompt = `Berikan penjelasan nahwu dari text tersebut per kalimat untuk orang awam dengan ringkas dan mudah dipahami (arab dan latin), jangan ada tanda * :\n\n${text}`;
                             break;
                             case 'nahwu1':
-                            prompt = `Mohon artikan kalimat berikut kata per kata, dengan format:
-Kata Arab, Transliterasi Latin, Arti, Kedudukan Kata dalam Kalimat dalam bahasa arab (akhiri dengan tanda !). setelah itu arti kalimat tersebut keseluruhan. diakhiri kesimpulan seluruh text arab tersebut.:\n\n${text}`;
+                            prompt = `Mohon artikan per kalimat kata per kata, dengan format:
+Kata Arab (dengan harokat nahwu yang benar), Transliterasi Latin, Arti, Kedudukan Kata dalam Kalimat dalam bahasa arab (akhiri dengan tanda !) tanda seru di akhir setiap baris.  contoh: 
+
+وَهَذَا الْقِسْمُ مِنَ التَّوْحِيدِ 
+
+وَ, Wa, Dan, Harf Athaf (kata penghubung)!
+هَذَا, Hadza, Ini, Isim Isyarah (kata tunjuk), Mubtada' (subjek)!
+الْقِسْمُ, Al-Qismu, Bagian, Badal (pengganti) dari Isim Isyarah!
+مِنَ, Mina, Dari, Harf Jar (kata depan)!
+التَّوْحِيدِ, At-Tauḥīdi, Tauhid, Isim Majrur (kata yang dijarkan) oleh Harf Jar!
+. setelah itu arti kalimat tersebut keseluruhan. diakhiri kesimpulan seluruh text arab tersebut (berdasarkan pemahaman ulama salaf).:\n\n${text}`;
                             break;
 
                         default:
