@@ -257,14 +257,18 @@
 
   <body>
     <div id="app" class="container py-4">
-      <h2 class="d-flex justify-content-between align-items-center mb-4">
-        📸 Text Reader Gemini
+      <h2
+        class="d-flex justify-content-between align-items-center mb-4 h2 h-sm2"
+      >
+        📸 Text Reader
         <button
           v-if="apiKey"
           @click="removeApiKey"
           class="btn btn-danger btn-sm"
+          title="Hapus API Key"
         >
-          🗑 Hapus API
+          <span class="d-none d-sm-inline">🗑 Hapus API</span>
+          <span class="d-inline d-sm-none">🗑 api</span>
         </button>
       </h2>
 
@@ -297,7 +301,7 @@
         class="img-fluid rounded mb-3 border"
       />
 
-      <div class="mb-3" v-if="showCropper">
+      <div class="mb-3" v-if="showCropper" ref="cropButton">
         <button
           @click="cropAndRecognize"
           :class="['btn', 'mr-2', isCropping ? 'btn-primary loading' : 'btn-primary']"
@@ -753,6 +757,14 @@
           onImageChange(event) {
             const file = event.target.files[0];
             this.handleImage(file);
+
+            // Scroll setelah render selesai
+            this.$nextTick(() => {
+              const target = this.$refs.cropButton;
+              if (target) {
+                target.scrollIntoView({ behavior: "smooth", block: "center" });
+              }
+            });
           },
           pasteFromClipboard() {
             navigator.clipboard
