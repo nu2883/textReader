@@ -324,6 +324,12 @@
         <span v-if="!speaking">🔈 Baca Kesimpulan</span>
         <span v-else>❚❚ Berhenti Membaca</span>
       </button>
+
+      <div class="d-flex align-items-center mb-2">
+  <button class="btn btn-sm btn-outline-secondary mr-2" @click="fontSize -= 2">A-</button>
+  <button class="btn btn-sm btn-outline-secondary" @click="fontSize += 2">A+</button>
+</div>
+
     </div>
 
     <h5 class="mb-2">📚 Hasil Analisis:</h5>
@@ -343,18 +349,24 @@
  <div class="sentence-list mt-4">
   <h5>Daftar Kalimat:</h5>
   <p v-if="sentences.length === 0 && summary.trim()">Tidak ada kalimat yang dapat dibaca setelah pemrosesan.</p>
-  <div v-for="(sentence, index) in sentences"
-       :key="index"
-       :ref="index === currentSentenceIndex ? 'currentSentence' : null"
-       :class="[
-         'p-2 mb-2 rounded border',
-         index === currentSentenceIndex && speaking ? 'bg-primary text-white' : '',
-         index < currentSentenceIndex && !speaking ? 'bg-light text-muted' : ''
-       ]"
-       @click="jumpToSentence(index)"
-       style="cursor:pointer;">
-    {{ sentence }}
-  </div>
+<div
+  v-for="(sentence, index) in sentences"
+  :key="index"
+  v-bind:ref="index === currentSentenceIndex ? 'currentSentence' : null"
+  :class="[
+    'p-2 mb-2 rounded border',
+    (index === currentSentenceIndex && speaking) ? 'bg-primary text-white' : '',
+    (index < currentSentenceIndex && !speaking) ? 'bg-light text-muted' : ''
+  ]"
+  :style="{
+    cursor: 'pointer',
+    fontSize: fontSize + 'px'
+  }"
+  @click="jumpToSentence(index)"
+>
+  {{ sentence }}
+</div>
+
 </div>
 
 
@@ -399,6 +411,7 @@
                 // --- AKHIR DATA BARU ---
                  userInactive: true,
     inactivityTimer: null,
+      fontSize: 16, // default ukuran font dalam px
             },
             computed: {
                formattedSummary() {
