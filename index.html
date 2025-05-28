@@ -15,15 +15,23 @@
             padding: 1rem;
             background: #f5f5f5;
         }
+        .arab-text {
+  font-size: 1.2em;
+  direction: rtl;
+  unicode-bidi: embed;
+  font-family: "Scheherazade", "Amiri", "Arial", sans-serif; /* font arab favorit kamu */
+}
 
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
+      @media (min-width: 601px) {
+  .container {
+    max-width: 600px;
+    margin: auto;
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+}
 
         textarea,
         input[type='file'],
@@ -240,136 +248,126 @@
 </head>
 
 <body>
-    <div id="app" class="container">
-        <h2 class="d-flex justify-content-between align-items-center mb-3">
-            📸 Text Reader Gemini
-            <button v-if="apiKey" @click="removeApiKey" class="btn btn-danger btn-sm remove-api">🗑 Hapus API</button>
-        </h2>
+<div id="app" class="container py-4">
+  <h2 class="d-flex justify-content-between align-items-center mb-4">
+    📸 Text Reader Gemini
+    <button v-if="apiKey" @click="removeApiKey" class="btn btn-danger btn-sm">
+      🗑 Hapus API
+    </button>
+  </h2>
 
-        <div class="form-group">
-            <select v-model="ocrLang" class="form-control">
-                <option value="ara">Arab</option>
-                <option value="eng">Latin</option>
-            </select>
-        </div>
+  <div class="form-group mb-3">
+    <select v-model="ocrLang" class="form-control">
+      <option value="ara">Arab</option>
+      <option value="eng">Latin</option>
+    </select>
+  </div>
 
-        <div class="form-group paste-button-container">
-            <button @click="pasteFromClipboard" class="btn btn-info btn-block">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-clipboard-check mr-2" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                        d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z" />
-                    <path
-                        d="M4 1.5H3a2 2 0 0 0-2 2V12a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z" />
-                    <path
-                        d="M9 1a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v9a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h1V2a1 1 0 0 1 1-1h2z" />
-                </svg>
-                Tempel dari Clipboard (Gambar)
-            </button>
-        </div>
+  <div class="form-group mb-3">
+    <button @click="pasteFromClipboard" class="btn btn-info btn-block">
+      📋 Tempel dari Clipboard (Gambar)
+    </button>
+  </div>
 
-        <div class="form-group">
-            <input type="file" accept="image/*" @change="onImageChange" class="form-control-file">
-        </div>
+  <div class="form-group mb-3">
+    <input type="file" accept="image/*" @change="onImageChange" class="form-control-file">
+  </div>
 
-        <canvas id="canvas" style="display:none;"></canvas>
-        <img id="image" v-show="showCropper" class="mb-2" />
-        <button v-if="showCropper" @click="cropAndRecognize"
-            :class="{'btn-primary': !isCropping, 'btn-primary loading': isCropping}">
-            <span v-if="!isCropping">📐 Crop & OCR</span>
-            <span v-else>⏳ Processing...</span>
-        </button>
-        <button v-if="showCropper" @click="fullCrop" class="btn btn-secondary ml-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-crop mr-1"
-                viewBox="0 0 16 16">
-                <path
-                    d="M3.5 1.5a.5.5 0 0 1 .5.5V3h-1.5a.5.5 0 0 1 0-1H3v-1.5a.5.5 0 0 1 .5-.5zm-2 0a.5.5 0 0 0-.5.5V3h1.5a.5.5 0 0 0 0-1H1v-1.5a.5.5 0 0 0-.5-.5zM1 3a.5.5 0 0 1 .5-.5H3V1.5a.5.5 0 0 1 1 0V2.5h1.5a.5.5 0 0 1 0 1H4v1.5a.5.5 0 0 1-1 0V3H1.5a.5.5 0 0 1-.5-.5zM14 3a.5.5 0 0 1-.5-.5H12V1.5a.5.5 0 0 1 1 0V2.5h1.5a.5.5 0 0 1 0 1H13v1.5a.5.5 0 0 1-1 0V3h-1.5a.5.5 0 0 1-.5-.5zM12.5 1.5a.5.5 0 0 0-.5.5V3h1.5a.5.5 0 0 0 0-1H13v-1.5a.5.5 0 0 0-.5-.5zM14 1a.5.5 0 0 1 .5.5V3h-1.5a.5.5 0 0 1 0-1H15v-1.5a.5.5 0 0 1-.5-.5zM15 12a.5.5 0 0 1-.5.5H13v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H12v-1.5a.5.5 0 0 1 1 0V12h1.5a.5.5 0 0 1 .5.5zM13.5 14.5a.5.5 0 0 0-.5-.5H12v-1.5a.5.5 0 0 0-1 0V14h-1.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V15h1.5a.5.5 0 0 0 0-1H14v-1.5a.5.5 0 0 0-.5-.5zM3 12a.5.5 0 0 1 .5.5H4v1.5a.5.5 0 0 1-1 0V13H1.5a.5.5 0 0 1 0-1H3v-1.5a.5.5 0 0 1 1 0V12H3.5a.5.5 0 0 1-.5-.5zM1.5 14.5a.5.5 0 0 0 .5-.5H3v-1.5a.5.5 0 0 0-1 0V14H1.5a.5.5 0 0 0 0 .5zM.5 12a.5.5 0 0 0 .5.5H2v1.5a.5.5 0 0 0 1 0V13h1.5a.5.5 0 0 0 0-1H3v-1.5a.5.5 0 0 0-1 0V12H.5z" />
-            </svg>
-            Full Crop
-        </button>
+  <canvas id="canvas" style="display: none;"></canvas>
+  <img id="image" v-show="showCropper" class="img-fluid rounded mb-3 border" />
 
-        <div class="form-group">
-            <textarea v-model="textInput" rows="5" placeholder="Atau tulis/ubah teks manual di sini..."
-                class="form-control"></textarea>
-        </div>
+  <div class="mb-3" v-if="showCropper">
+    <button @click="cropAndRecognize" :class="['btn', 'mr-2', isCropping ? 'btn-primary loading' : 'btn-primary']">
+      <span v-if="!isCropping">📐 Crop & OCR</span>
+      <span v-else>⏳ Processing...</span>
+    </button>
+    <button @click="fullCrop" class="btn btn-secondary">
+      🖼 Full Crop
+    </button>
+  </div>
 
-        <div class="mb-3" v-if="textInput.trim()">
-            <button @click="copyText" class="btn btn-success copy-btn">📋 Salin Teks</button>
-        </div>
+  <div class="form-group mb-3">
+    <textarea v-model="textInput" rows="5" placeholder="Atau tulis/ubah teks manual di sini..." class="form-control"></textarea>
+  </div>
 
-        <div class="form-group">
-            <label>🔍 Pilih Jenis Analisis:</label>
-            <select class="form-control" v-model="selectedType">
-                <option value="nahwu1">📖 Analisis Nahwu kata</option>
-                <option value="summarize">📌 Ringkas / Jelaskan</option>
-                <option value="kesimpulan">🧠 Buat Kesimpulan</option>
-                <option value="translate">🌍 Terjemahkan</option>
-                <option value="paraphrase">🔄 Parafrasekan</option>
-                <option value="grammar">✍️ Koreksi Grammar</option>
-                <option value="nahwu">📖 Analisis Nahwu</option>
-            </select>
-        </div>
+  <div class="mb-3" v-if="textInput.trim()">
+    <button @click="copyText" class="btn btn-success">📋 Salin Teks</button>
+  </div>
 
-        <button @click="analyzeContent" :class="{'btn btn-primary': !loading, 'btn btn-primary loading': loading}">
-            <span v-if="!loading">🔍 Analisis dengan Gemini</span>
-            <span v-else>⏳ Menganalisis...</span>
-        </button>
+  <div class="form-group mb-3">
+    <label>🔍 Pilih Jenis Analisis:</label>
+    <select class="form-control" v-model="selectedType">
+      <option value="perkata">🔤 Terjemah Per Kata</option>
+      <option value="nahwu1">📝 Analisis Nahwu (Kata)</option>
+      <option value="summarize">📌 Ringkasan / Penjelasan</option>
+      <option value="kesimpulan">🧠 Buat Kesimpulan</option>
+      <option value="translate">🌍 Terjemahkan</option>
+      <option value="paraphrase">🔁 Parafrasekan</option>
+      <option value="grammar">✍️ Koreksi Tata Bahasa</option>
+      <option value="nahwu">📚 Analisis Nahwu (Kalimat)</option>
+    </select>
+  </div>
 
-        <div v-if="loading" class="mt-3">⏳ Menganalisis...</div>
+  <div class="mb-3">
+    <button @click="analyzeContent" :class="['btn', loading ? 'btn-primary loading' : 'btn-primary']">
+      <span v-if="!loading">🔍 Analisis dengan Gemini</span>
+      <span v-else>⏳ Menganalisis...</span>
+    </button>
+  </div>
 
-        <div v-if="summary" class="result-box mt-3">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <button @click="copySumary" class="btn btn-success copy-btn">📋 Salin Teks Hasil</button>
-                <button @click="startReading" class="ml-5 btn btn-primary">
-                    <span v-if="!speaking">🔈 Baca Kesimpulan</span>
-                    <span v-else>❚❚ Berhenti Membaca</span>
-                </button>
-            </div>
-            <div><strong>📚 Hasil Analisis:</strong></div>
-            <div v-html="formattedSummary"></div>
+  <div v-if="loading" class="alert alert-info">⏳ Menganalisis...</div>
 
-            <div class="tts-controls">
-                <label for="readingRate">Kecepatan Membaca:</label>
-                <input type="range" id="readingRate" v-model="readingRate" min="0.5" max="2" step="0.1"
-                    @input="updateReadingRate">
-                <span>{{ readingRate }}x</span>
-            </div>
-        </div>
-
-
-        <p v-if="speaking" class="status-message">
-            Membaca kalimat:
-        </p>
-        <p v-else-if="summary.trim() && !speaking && currentSentenceIndex > 0" class="status-message">
-            Pembacaan selesai.
-        </p>
-        <p v-else-if="!summary.trim()" class="status-message">
-            Silakan masukkan teks untuk dibaca.
-        </p>
-
-        <div class="sentence-list">
-            <h3>Daftar Kalimat:</h3>
-            <p v-if="sentences.length === 0 && summary.trim()">Tidak ada kalimat yang dapat dibaca setelah pemrosesan.
-            </p>
-            <div v-for="(sentence, index) in sentences" :key="index" :class="{
-                    'active-sentence': index === currentSentenceIndex && speaking,
-                    'completed-sentence': index < currentSentenceIndex && !speaking && currentSentenceIndex > 0
-                }" @click="jumpToSentence(index)" class="sentence-item">
-                {{ sentence }}
-            </div>
-        </div>
-
-
-        <div v-if="!apiKey && showApiKeyInput" class="api-input-overlay">
-            <div class="api-input-box">
-                <h5>Masukkan API Key Gemini</h5>
-                <input type="text" v-model="apiKeyInput" placeholder="Masukkan API Key Gemini Anda"
-                    class="form-control mb-2" />
-                <button @click="saveApiKey" class="btn btn-primary mr-2">Simpan API Key</button>
-                <button @click="skipApiKey" class="btn btn-secondary">Lewati</button>
-            </div>
-        </div>
+  <div v-if="summary" class="result-box mt-4 p-3 border rounded bg-light">
+    <div class="d-flex justify-content-between align-items-center mb-3 sticky-top bg-white py-2 px-3 border-bottom" style="z-index: 1000;">
+      <button @click="copySumary" class="btn btn-success">📋 Salin Teks Hasil</button>
+      <button @click="startReading" class="btn btn-primary ml-3">
+        <span v-if="!speaking">🔈 Baca Kesimpulan</span>
+        <span v-else>❚❚ Berhenti Membaca</span>
+      </button>
     </div>
+
+    <h5 class="mb-2">📚 Hasil Analisis:</h5>
+    <div v-html="formattedSummary" class="mb-3"></div>
+
+    <div class="form-group">
+      <label for="readingRate">🔊 Kecepatan Membaca:</label>
+      <input type="range" id="readingRate" v-model="readingRate" min="0.5" max="2" step="0.1" class="form-range" @input="updateReadingRate">
+      <span>{{ readingRate }}x</span>
+    </div>
+  </div>
+
+  <p v-if="speaking" class="text-info mt-3">Membaca kalimat:</p>
+  <p v-else-if="summary.trim() && !speaking && currentSentenceIndex > 0" class="text-success mt-3">Pembacaan selesai.</p>
+  <p v-else-if="!summary.trim()" class="text-muted mt-3">Silakan masukkan teks untuk dibaca.</p>
+
+ <div class="sentence-list mt-4">
+  <h5>Daftar Kalimat:</h5>
+  <p v-if="sentences.length === 0 && summary.trim()">Tidak ada kalimat yang dapat dibaca setelah pemrosesan.</p>
+  <div v-for="(sentence, index) in sentences"
+       :key="index"
+       :ref="index === currentSentenceIndex ? 'currentSentence' : null"
+       :class="[
+         'p-2 mb-2 rounded border',
+         index === currentSentenceIndex && speaking ? 'bg-primary text-white' : '',
+         index < currentSentenceIndex && !speaking ? 'bg-light text-muted' : ''
+       ]"
+       @click="jumpToSentence(index)"
+       style="cursor:pointer;">
+    {{ sentence }}
+  </div>
+</div>
+
+
+  <div v-if="!apiKey && showApiKeyInput" class="api-input-overlay">
+    <div class="api-input-box p-4 border rounded bg-white shadow">
+      <h5 class="mb-3">🔑 Masukkan API Key Gemini</h5>
+      <input type="text" v-model="apiKeyInput" placeholder="Masukkan API Key Gemini Anda" class="form-control mb-3" />
+      <button @click="saveApiKey" class="btn btn-primary mr-2">Simpan API Key</button>
+      <button @click="skipApiKey" class="btn btn-secondary">Lewati</button>
+    </div>
+  </div>
+</div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
@@ -391,7 +389,7 @@
                 isCropping: false, // State untuk animasi Crop & OCR
                 isCameraImage: false, // State untuk menandai gambar dari kamera
                 pastedImage: null, // State untuk menyimpan data URL gambar yang di-paste
-                selectedType: 'nahwu1', // default
+                selectedType: 'perkata', // default
 
                 // --- DATA BARU UNTUK TEXT-TO-SPEECH ---
                 sentences: [], // Array untuk menyimpan kalimat-kalimat yang sudah dipisah
@@ -399,18 +397,38 @@
                 speaking: false, // Status apakah pembacaan sedang berlangsung
                 readingRate: 1.0, // Kecepatan membaca, default 1.0 (normal)
                 // --- AKHIR DATA BARU ---
+                 userInactive: true,
+    inactivityTimer: null,
             },
             computed: {
-                formattedSummary() {
-                    if (!this.summary) return '';
-                    // Menghilangkan semua asterisk dan mengganti baris baru dengan <br>
-                    const plain = this.summary
-                        .replace(/\*\*(.*?)\*\*/g, '$1') // **teks** -> teks
-                        .replace(/\*(.*?)\*/g, '$1')     // *teks* -> teks
-                        .replace(/\n/g, '<br>');         // baris baru jadi <br>
-                    return plain;
-                }
+               formattedSummary() {
+    if (!this.summary) return '';
+
+    // Hilangkan tanda asterisk seperti yang kamu buat
+    let plain = this.summary
+      .replace(/\*\*(.*?)\*\*/g, '$1')  // **teks** -> teks
+      .replace(/\*(.*?)\*/g, '$1')      // *teks* -> teks
+      .replace(/\n/g, '<br>');          // newline jadi <br>
+
+    // Bungkus teks Arab dengan span untuk styling
+    plain = plain.replace(/([\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]+)/g, '<span class="arab-text">$1</span>');
+
+    return plain;
+  },
+ 
             },
+            watch: {
+  currentSentenceIndex() {
+    if (this.userInactive) {
+      this.$nextTick(() => {
+        const current = this.$refs.currentSentence;
+        if (current && current[0]) {
+          current[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+  }
+},
             methods: {
                 // --- METODE TEXT-TO-SPEECH ---
                 startReading() {
@@ -434,7 +452,7 @@
                     const cleanedSummary = this.summary.replace(/\*/g, '').replace(/Artinya/g, ' ');
 
                     // Pisahkan teks yang sudah bersih menjadi kalimat-kalimat.
-                    this.sentences = cleanedSummary.split(/(?<=[.?!])\s+/).filter(s => s.trim() !== '');
+                    this.sentences = cleanedSummary.split(/(?<=[,.?!])\s+/).filter(s => s.trim() !== '');
 
                     // Jika setelah pembersihan dan pemisahan tidak ada kalimat yang valid, hentikan.
                     if (this.sentences.length === 0) {
@@ -595,8 +613,10 @@
                     img.onload = () => {
                         const canvas = document.getElementById('canvas');
                         // Set canvas dimensions to the natural image dimensions to ensure full quality for Cropper
-                        canvas.width = img.naturalWidth;
-                        canvas.height = img.naturalHeight;
+                       canvas.width = img.naturalWidth;
+canvas.height = img.naturalHeight;
+canvas.style.width = img.naturalWidth + 'px';
+canvas.style.height = img.naturalHeight + 'px';
 
                         const imageElement = document.getElementById('image');
                         imageElement.src = img.src; // Set source for the <img> element
@@ -725,7 +745,7 @@ Pelajaran penting (dalam poin)
 Berikut teksnya:\n\n${text}`;
                             break;
                         case 'kesimpulan':
-                            prompt = `Buat Kesimpulannya, terjemahkan teks berikut ke dalam Bahasa Indonesia secara akurat dan alami. Tuliskan kesimpulan dilanjutkan terjemahnya lengkapnya.:\n\n${text}`;
+                            prompt = `Buat Kesimpulannya (sesuai pemahaman ulama salaf). terjemahkan teks berikut ke dalam Bahasa Indonesia secara akurat dan alami. Tuliskan kesimpulan dilanjutkan terjemahnya lengkapnya.:\n\n${text}`;
                             break;
                         case 'translate':
                             prompt = `Terjemahkan teks berikut ke dalam Bahasa Indonesia secara akurat dan alami:\n\n${text}`;
@@ -739,11 +759,45 @@ Berikut teksnya:\n\n${text}`;
                         case 'nahwu':
                             prompt = `Berikan penjelasan nahwu dari text tersebut per kalimat untuk orang awam dengan ringkas dan mudah dipahami (arab dan latin), jangan ada tanda * :\n\n${text}`;
                             break;
-                            case 'nahwu1':
+                        case 'nahwu1':
+                            prompt = `(lakukan dibalik layar: terjemahkan, pisahkan per kalimat dengan pemotongan yang tepat) Lalu artikan per kalimat kata per kata, dengan format:
+                                    Kata Arab (dengan harokat nahwu yang benar), Transliterasi Latin, Arti, Kedudukan Kata dalam Kalimat dalam bahasa arab (akhiri dengan tanda !) tanda seru di akhir setiap baris.  contoh: 
+
+                                    وَهَذَا الْقِسْمُ مِنَ التَّوْحِيدِ 
+
+                                    وَ, Wa, Dan, Harf Athaf!
+                                    هَذَا, Hadza, Ini, Isim Isyarah, Mubtada'!
+                                    الْقِسْمُ, Al-Qismu, Bagian, Badal dari Isim Isyarah!
+                                    مِنَ, Mina, Dari, Harf Jar !
+                                    التَّوْحِيدِ, At-Tauḥīdi, Tauhid, Isim Majrur oleh Harf Jar!
+                                    . setelah itu arti kalimat tersebut keseluruhan. diakhiri kesimpulan seluruh text arab tersebut (berdasarkan pemahaman ulama salaf).
+                                    
+                                    (lakukan dibalik layar: terjemahkan, pisahkan per kalimat arab (satu kalimat penuh) sehingga tidak menimbulkan arti yang rancu/ambigu). Lalu 
+                                    
+                                    :\n\n${text}`;
+                            break;
+                        case 'perkata':
+                            prompt = `artikan per kalimat kata per kata, dengan format:
+                                    Kata Arab (dengan harokat nahwu yang benar), Transliterasi Latin, Arti, Kedudukan Kata dalam Kalimat dalam bahasa arab (akhiri dengan tanda !) di akhir setiap baris.  contoh: 
+
+                                    وَهَذَا : الْقِسْمُ مِنَ التَّوْحِيدِ
+
+                                    وَ, Wa, Dan, حرف عطف
+                                    هَذَا, Hadza, Ini, اسم إشارة، مبتدأ
+                                    الْقِسْمُ, Al-Qismu, Bagian, بدل من اسم الإشارة
+                                    مِنَ, Mina, Dari, حرف جر
+                                    التَّوْحِيدِ, At-Tauḥīdi, Tauhid, اسم مجرور بحرف الجر
+setelah selesai satu kalimat arti perkatanya, lanjutkan dengan arti lengkap satu kalimat tersebut.
+                                    artinya : Dan ini merupakan bagian dari tauhid.
+                                    (jangan lupa akhiri dengan tanda !)
+
+                                    Setelah buat kesimpulan dari seluruh text arab tersebut (berdasarkan pemahaman ulama salaf). tanpa kata2 pengantar. langsung saja kalimat pertama. (hilangkan kata : kalimat 1, kalimat 2, dst.):\n\n${text}`;
+                            break;
+                        case 'nahwu2':
                             prompt = `Mohon artikan per kalimat kata per kata, dengan format:
 Kata Arab (dengan harokat nahwu yang benar), Transliterasi Latin, Arti, Kedudukan Kata dalam Kalimat dalam bahasa arab (akhiri dengan tanda !) tanda seru di akhir setiap baris.  contoh: 
 
-وَهَذَا الْقِسْمُ مِنَ التَّوْحِيدِ 
+وَهَذَا : الْقِسْمُ مِنَ التَّوْحِيدِ 
 
 وَ, Wa, Dan, Harf Athaf (kata penghubung)!
 هَذَا, Hadza, Ini, Isim Isyarah (kata tunjuk), Mubtada' (subjek)!
@@ -792,6 +846,16 @@ Kata Arab (dengan harokat nahwu yang benar), Transliterasi Latin, Arti, Keduduka
                         .then(() => alert("✅ Teks hasil analisis berhasil disalin!"))
                         .catch(err => alert("❌ Gagal menyalin teks: " + err));
                 },
+                 handleUserActivity() {
+    this.userInactive = false;
+    this.resetInactivityTimer();
+  },
+  resetInactivityTimer() {
+    clearTimeout(this.inactivityTimer);
+    this.inactivityTimer = setTimeout(() => {
+      this.userInactive = true;
+    }, 7000); // 7 detik
+  },
             },
             // Lifecycle hook: Dipanggil setelah instance dibuat dan DOM di-mount
             mounted() {
@@ -799,6 +863,9 @@ Kata Arab (dengan harokat nahwu yang benar), Transliterasi Latin, Arti, Keduduka
                 if (!this.apiKey && !this.apiKeySkipped) {
                     this.showApiKeyInput = true;
                 }
+
+                  window.addEventListener('mousemove', this.handleUserActivity);
+  this.resetInactivityTimer();
 
                 // Inisialisasi onvoiceschanged listener untuk Web Speech API
                 window.speechSynthesis.onvoiceschanged = () => {
