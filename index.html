@@ -21,11 +21,13 @@
         padding: 1rem;
         background: #f5f5f5;
       }
+
       .arab-text {
         font-size: 1.2em;
         direction: rtl;
         unicode-bidi: embed;
-        font-family: "Scheherazade", "Amiri", "Arial", sans-serif; /* font arab favorit kamu */
+        font-family: "Scheherazade", "Amiri", "Arial", sans-serif;
+        /* font arab favorit kamu */
       }
 
       @media (min-width: 601px) {
@@ -348,31 +350,34 @@
 
       <div v-if="summary" class="result-box mt-4 p-3 border rounded bg-light">
         <div
-          class="d-flex justify-content-between align-items-center mb-3 sticky-top bg-white py-2 px-3 border-bottom"
+          class="d-flex justify-content-between align-items-center flex-wrap mb-3 sticky-top bg-white py-2 px-3 border-bottom gap-2"
           style="z-index: 1000"
         >
-          <button @click="copySumary" class="btn btn-success">
-            📋 Salin Teks Hasil
-          </button>
-          <button @click="startReading" class="btn btn-primary ml-3">
-            <span v-if="!speaking">🔈 Baca Kesimpulan</span>
-            <span v-else>❚❚ Berhenti Membaca</span>
+          <!-- Tombol Salin -->
+          <button
+            @click="copySumary"
+            class="btn btn-success"
+            title="Salin Teks Hasil"
+          >
+            <span class="d-none d-sm-inline">📋 Salin Teks Hasil</span>
+            <span class="d-inline d-sm-none">📋</span>
           </button>
 
-          <div class="d-flex align-items-center mb-2">
-            <button
-              class="btn btn-sm btn-outline-secondary mr-2"
-              @click="fontSize -= 2"
+          <!-- Tombol Baca / Stop -->
+          <button
+            @click="startReading"
+            class="btn btn-primary ml-sm-3"
+            :title="speaking ? 'Berhenti Membaca' : 'Baca Kesimpulan'"
+          >
+            <span class="d-none d-sm-inline" v-if="!speaking"
+              >🔈 Baca Kesimpulan</span
             >
-              A-
-            </button>
-            <button
-              class="btn btn-sm btn-outline-secondary"
-              @click="fontSize += 2"
-            >
-              A+
-            </button>
-          </div>
+            <span class="d-none d-sm-inline" v-else>❚❚ Berhenti Membaca</span>
+            <span class="d-inline d-sm-none">
+              <span v-if="!speaking">🔈</span>
+              <span v-else>❚❚</span>
+            </span>
+          </button>
         </div>
 
         <h5 class="mb-2">📚 Hasil Analisis:</h5>
@@ -405,36 +410,81 @@
         Silakan masukkan teks untuk dibaca.
       </p>
 
-      <div class="sentence-list mt-4">
+      <div class="sentence-list mt-4" v-if="summary.length > 0">
         <h5>Daftar Kalimat:</h5>
 
         <div
-          class="d-flex justify-content-between align-items-center mb-3 sticky-top bg-white py-2 px-3 border-bottom"
+          class="sticky-top bg-white py-2 px-3 border-bottom"
           style="z-index: 1000"
         >
-          <button @click="copySumary" class="btn btn-success">
-            📋 Salin Teks Hasil
-          </button>
-          <button @click="startReading" class="btn btn-primary ml-3">
-            <span v-if="!speaking">🔈 Baca Kesimpulan</span>
-            <span v-else>❚❚ Berhenti Membaca</span>
-          </button>
+          <div
+            class="d-flex flex-wrap justify-content-between align-items-center gap-3"
+          >
+            <!-- Tombol Salin Teks -->
+            <button
+              @click="copySumary"
+              class="btn btn-success"
+              title="Salin Teks"
+            >
+              <span class="d-none d-sm-inline">📋 Salin Teks Hasil</span>
+              <span class="d-inline d-sm-none">📋</span>
+            </button>
 
-          <div class="d-flex align-items-center mb-2">
+            <!-- Tombol Baca / Stop -->
             <button
-              class="btn btn-sm btn-outline-secondary mr-2"
-              @click="fontSize -= 2"
+              @click="startReading"
+              class="btn btn-primary"
+              :title="speaking ? 'Berhenti Membaca' : 'Baca Kesimpulan'"
             >
-              A-
+              <span class="d-none d-sm-inline" v-if="!speaking"
+                >🔈 Baca Kesimpulan</span
+              >
+              <span class="d-none d-sm-inline" v-else>❚❚ Berhenti Membaca</span>
+              <span class="d-inline d-sm-none">
+                <span v-if="!speaking">🔈</span>
+                <span v-else>❚❚</span>
+              </span>
             </button>
-            <button
-              class="btn btn-sm btn-outline-secondary"
-              @click="fontSize += 2"
-            >
-              A+
-            </button>
+
+            <!-- Kontrol Ukuran Font -->
+            <div class="d-flex align-items-center">
+              <button
+                class="btn btn-sm btn-outline-secondary me-2"
+                @click="fontSize -= 2"
+                title="Perkecil Teks"
+              >
+                A-
+              </button>
+              <button
+                class="btn btn-sm btn-outline-secondary"
+                @click="fontSize += 2"
+                title="Perbesar Teks"
+              >
+                A+
+              </button>
+            </div>
+
+            <!-- Kontrol Kecepatan Membaca -->
+            <div class="d-flex flex-column align-items-start">
+              <label for="readingRate" class="mb-1 d-none d-sm-inline"
+                >🔊 Kecepatan Membaca:</label
+              >
+              <input
+                type="range"
+                id="readingRate"
+                v-model="readingRate"
+                min="0.5"
+                max="2"
+                step="0.1"
+                class="form-range"
+                @input="updateReadingRate"
+                title="Kecepatan Membaca"
+              />
+              <span class="d-none d-sm-inline">{{ readingRate }}x</span>
+            </div>
           </div>
         </div>
+
         <p v-if="sentences.length === 0 && summary.trim()">
           Tidak ada kalimat yang dapat dibaca setelah pemrosesan.
         </p>
@@ -470,8 +520,10 @@
             Simpan API Key
           </button>
           <button @click="skipApiKey" class="btn btn-secondary">Lewati</button>
-          <a href="https://aistudio.google.com/app/apikey?hl=id&_gl=1*ogetyr*_ga*MTQ4NzEzMTEwOC4xNzQ4NDM1NTMz*_ga_P1DBVKWT6V*czE3NDg0MzU1MzMkbzEkZzAkdDE3NDg0MzU1MzMkajYwJGwwJGg1ODk1Nzk3OTA.">
-          <span>dapatkan api disini</span>
+          <a
+            href="https://aistudio.google.com/app/apikey?hl=id&_gl=1*ogetyr*_ga*MTQ4NzEzMTEwOC4xNzQ4NDM1NTMz*_ga_P1DBVKWT6V*czE3NDg0MzU1MzMkbzEkZzAkdDE3NDg0MzU1MzMkajYwJGwwJGg1ODk1Nzk3OTA."
+          >
+            <span>dapatkan api disini</span>
           </a>
         </div>
       </div>
@@ -546,64 +598,67 @@
         },
         methods: {
           // --- METODE TEXT-TO-SPEECH ---
-startReading() {
-  // Hentikan jika sedang berbicara
-  if (this.speaking) {
-    this.stopReading();
-    return;
-  }
+          startReading() {
+            // Hentikan jika sedang berbicara
+            if (this.speaking) {
+              this.stopReading();
+              return;
+            }
 
-  // Batalkan pembacaan sebelumnya
-  window.speechSynthesis.cancel();
+            // Batalkan pembacaan sebelumnya
+            window.speechSynthesis.cancel();
 
-  // Periksa apakah ada teks untuk dibaca
-  if (!this.summary.trim()) {
-    console.warn("Tidak ada teks untuk dibaca.");
-    alert("Silakan analisis teks terlebih dahulu atau isi bagian 'Hasil Analisis'.");
-    return;
-  }
+            // Periksa apakah ada teks untuk dibaca
+            if (!this.summary.trim()) {
+              console.warn("Tidak ada teks untuk dibaca.");
+              alert(
+                "Silakan analisis teks terlebih dahulu atau isi bagian 'Hasil Analisis'."
+              );
+              return;
+            }
 
-  // Bersihkan dan pisahkan teks menjadi kalimat
-  const cleanedSummary = this.summary
-    .replace(/\*/g, "")
-    .replace(/Artinya/g, " ")
-    .trim();
+            // Bersihkan dan pisahkan teks menjadi kalimat
+            const cleanedSummary = this.summary
+              .replace(/\*/g, "")
+              .replace(/Artinya/g, " ")
+              .trim();
 
-  this.sentences = cleanedSummary
-    .split(/(?<=[.!?])\s+/)
-    .filter(s => s.trim() !== "");
+            this.sentences = cleanedSummary
+              .split(/(?<=[.!?])\s+/)
+              .filter((s) => s.trim() !== "");
 
-  if (this.sentences.length === 0) {
-    console.warn("Teks tidak mengandung kalimat yang valid.");
-    alert("Teks tidak dapat diproses menjadi kalimat untuk dibaca.");
-    return;
-  }
+            if (this.sentences.length === 0) {
+              console.warn("Teks tidak mengandung kalimat yang valid.");
+              alert("Teks tidak dapat diproses menjadi kalimat untuk dibaca.");
+              return;
+            }
 
-  // Fungsi internal untuk memilih voice dan memulai pembacaan
-  const startWithVoice = () => {
-    const voices = window.speechSynthesis.getVoices();
-    const indonesianVoice = voices.find(v => v.lang === 'id-ID');
+            // Fungsi internal untuk memilih voice dan memulai pembacaan
+            const startWithVoice = () => {
+              const voices = window.speechSynthesis.getVoices();
+              const indonesianVoice = voices.find((v) => v.lang === "id-ID");
 
-    if (!indonesianVoice) {
-      alert("Voice Bahasa Indonesia tidak tersedia di perangkat ini.");
-    }
+              if (!indonesianVoice) {
+                alert(
+                  "Voice Bahasa Indonesia tidak tersedia di perangkat ini."
+                );
+              }
 
-    this.selectedVoice = indonesianVoice || null;
-    this.currentSentenceIndex = 0;
-    this.speaking = true;
-    this.readNextSentence(); // lanjut baca
-  };
+              this.selectedVoice = indonesianVoice || null;
+              this.currentSentenceIndex = 0;
+              this.speaking = true;
+              this.readNextSentence(); // lanjut baca
+            };
 
-  // Jika voices belum siap, tunggu dulu
-  if (window.speechSynthesis.getVoices().length === 0) {
-    window.speechSynthesis.onvoiceschanged = () => {
-      startWithVoice();
-    };
-  } else {
-    startWithVoice();
-  }
-}
-,
+            // Jika voices belum siap, tunggu dulu
+            if (window.speechSynthesis.getVoices().length === 0) {
+              window.speechSynthesis.onvoiceschanged = () => {
+                startWithVoice();
+              };
+            } else {
+              startWithVoice();
+            }
+          },
           readNextSentence() {
             // Jika semua kalimat sudah dibaca, hentikan proses
             if (this.currentSentenceIndex >= this.sentences.length) {
