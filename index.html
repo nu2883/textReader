@@ -272,10 +272,6 @@
   <div class="form-group mb-3">
     <input type="file" accept="image/*" @change="onImageChange" class="form-control-file">
   </div>
-
-  <canvas id="canvas" style="display: none;"></canvas>
-  <img id="image" v-show="showCropper" class="img-fluid rounded mb-3 border" />
-
   <div class="mb-3" v-if="showCropper">
     <button @click="cropAndRecognize" :class="['btn', 'mr-2', isCropping ? 'btn-primary loading' : 'btn-primary']">
       <span v-if="!isCropping">📐 Crop & OCR</span>
@@ -285,6 +281,10 @@
       🖼 Full Crop
     </button>
   </div>
+  <canvas id="canvas" style="display: none;"></canvas>
+  <img id="image" v-show="showCropper" class="img-fluid rounded mb-3 border" />
+
+
 
   <div class="form-group mb-3">
     <textarea v-model="textInput" rows="5" placeholder="Atau tulis/ubah teks manual di sini..." class="form-control"></textarea>
@@ -683,6 +683,7 @@ canvas.style.height = img.naturalHeight + 'px';
                         return;
                     }
                     this.isCropping = true;
+                    this.textInput = '';
                     const croppedCanvas = this.cropper.getCroppedCanvas(); // Dapatkan kanvas yang sudah di-crop
 
                     // Gambarkan croppedCanvas ke canvas yang tersembunyi
@@ -731,6 +732,7 @@ canvas.style.height = img.naturalHeight + 'px';
                         alert("❌ Gagal melakukan OCR. Pastikan koneksi internet aktif dan gambar jelas.");
                     }).finally(() => {
                         this.isCropping = false; // Nonaktifkan status loading OCR
+                        this.copyText();
                     });
                 },
                 fullCrop() {
@@ -897,7 +899,7 @@ Kata Arab (dengan harokat nahwu yang benar), Transliterasi Latin, Arti, Keduduka
                 copyText() {
                     // Salin teks dari textInput (teks mentah hasil OCR atau manual)
                     navigator.clipboard.writeText(this.textInput)
-                        .then(() => alert("✅ Teks berhasil disalin!"))
+                        
                         .catch(err => alert("❌ Gagal menyalin teks: " + err));
                 },
                 copySumary() {
