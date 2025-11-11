@@ -409,7 +409,7 @@
                 cropper: null,
                 apiKey: localStorage.getItem('gemini_api') || '',
                 apiKeyInput: '',
-                ocrLang: 'ara', // OCR language for Arabic (default)
+                ocrLang: localStorage.getItem('user_ocrLang') || 'ara',
                 apiKeySkipped: localStorage.getItem('gemini_api_skipped') === 'true' || false,
                 showApiKeyInput: true,
                 isCropping: false, // State untuk animasi Crop & OCR
@@ -445,6 +445,12 @@
  
             },
             watch: {
+                 ocrLang(newLang) {
+        // Setiap kali ocrLang berubah (karena v-model), jalankan ini:
+        localStorage.setItem('user_ocrLang', newLang);
+        
+        console.log('OCR Language tersimpan:', newLang); // Untuk debugging
+    },
   currentSentenceIndex() {
     if (this.userInactive) {
       this.$nextTick(() => {
@@ -457,6 +463,11 @@
   }
 },
             methods: {
+                updateOcrLanguage(newLang) {
+    // Pastikan kunci yang digunakan SAMA PERSIS dengan saat memuat!
+    this.data.ocrLang = newLang; 
+    localStorage.setItem('user_ocrLang', newLang); 
+},
                 // --- METODE TEXT-TO-SPEECH ---
                 startReading() {
                     if (this.speaking) {
